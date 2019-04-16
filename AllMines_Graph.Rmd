@@ -84,7 +84,7 @@ TopNOTUs <- function(sample,N) {
   names(sort(taxa_sums(sample), TRUE)[1:N])
 }
 #Creating data frame from phyloseq object
-top.Mines <- TopNOTUs(Mines_data, 50)
+top.Mines <- TopNOTUs(Mines_data, 100)
 Mines.df <- prune_taxa(top.Mines, Mines_data) %>% psmelt()
 #Sumarize data by site 
 #test <- BGM.df %>% group_by(Genus) %>% summarise(sum(Abundance))
@@ -121,6 +121,17 @@ plot_grid(Class_root, Class_soil, align = "h", rel_widths = c(1,1.65))
 ```
 
 ```{r}
+##Trying to stack the genus that belongs to the same class close to each other; also mannually set color so that the genus that belongs to the same class will be grouped in the same group of color
+Genus_soil <- ggplot(data = filter(Mines.df, Seq == "Soil"), aes(Site, Abundance, fill=factor (, levels = c ("g_unidentified", "g_Umbelopsis", "g_Tricholoma", "g_Scleroderma", "g_Russula", "g_Rhizopogon", "g_Pisolithus", "g_Oidiodendron", "g_Mortierella", "g_Meliniomycetes", "g_Leptosphaeria", "g_Elaphomyces", "g_Cortinarius", "g_Cenococcum", "g_Amanita", "g_Boletus")))) +
+  geom_bar(stat = "identity", position = position_fill()) + coord_flip() +
+    scale_fill_manual(values = c ("#e5f5f9", "#99d8c9", "#2ca25f", "#fee8c8", "#fdbb84", "#e34a33", "#e7e1ef", "#c994c7", "#dd1c77","#e5f5f9", "#99d8c9", "#2ca25f", "#fee8c8", "#fdbb84", "#e34a33", "#e7e1ef", "#c994c7", "#dd1c77", "#e5f5f9", "#99d8c9", "#2ca25f", "#fee8c8", "#fdbb84", "#e34a33", "#e7e1ef", "#c994c7", "#dd1c77")) + 
+    guides(fill = guide_legend(reverse = TRUE, ncol = 1, keyheight = 0.8)) +
+    facet_grid(~ Seq, drop = TRUE) +
+   theme(text = element_text(size = 15)) + theme_gray()
+```
+
+
+```{r}
 #Creating a table modeled after Huang et al. (2012)
 top10.BGM <- TopNOTUs(BGM_field, 10)
 top10.BGM.df <- prune_taxa(top10.BGM, BGM_field) %>% psmelt()
@@ -132,14 +143,6 @@ top10.BGM.df %>%
   summarize (relative_abundance = site_abundance / sample_sums ())
 ### what I am trying to do here is to calculate the relative abundance of each of the otus on different site (and also separated by "Soil" and "Roots"--which is classified under "Seq"). I wanted to use the sample_sums function to give me the overall number of reads from each site. How should I do this?
 
-```
-```{r}
-Genus_soil <- ggplot(data = filter(Mines.df, Seq == "Soil"), aes(Site, Abundance, fill = Genus)) +
-  geom_bar(stat = "identity", position = position_fill()) + coord_flip() +
-    scale_fill_manual(values = (rev(pal(24)))) + 
-    guides(fill = guide_legend(reverse = TRUE, ncol = 1, keyheight = 0.8)) +
-    facet_grid(~ Seq, drop = TRUE) +
-   theme(text = element_text(size = 15)) + theme_gray()
 ```
 
 
