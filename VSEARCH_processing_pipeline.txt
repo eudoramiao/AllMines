@@ -1,0 +1,50 @@
+#Vsearch processing pipeline
+
+#starting from the combined_seqs.fna
+
+#1. remove SSU
+cutadapt -g ^CTTGGTCATTTAGAGGAAGTAAAAGTCGTAACAAGGTTTCCGTAGGTGAACCTGCGGAAGGATCATT -o combined_seqs.cut.fasta combined_seqs.fasta
+
+#2. remove 5.8S
+cutadapt -a AACTTTCAACAACGGATCTCTTGGYTCTSGCATCGATGAAGAACGCAGC$ -o combined_seqs.cut2.fasta combined_seqs.cut.fasta
+
+#3. chimera check
+vsearch --uchime_ref combined_seqs.cut2.fasta --db /mnt/Data2/unite_qiime/sh_refs_qiime_ver8_dynamic_s_02.02.2019.fasta --sizeout --fasta_width 0 --thread 12 --nonchimeras all_combined_seqs.non_chimeras.fasta
+
+#4. dereplication
+vsearch --derep_fulllength all_combined_seqs.non_chimeras.fasta --output all_combined_seqs.non_chimeras.derep.fasta --uc all_combined_seqs.non_chimeras.derep.uc --relabel_keep --sizeout --minuniquesize 1 --threads 24
+
+#5. clustering
+vsearch -cluster_fast all_combined_seqs.non_chimeras.derep.fasta -id 0.95 --sizein --relabel OTU_ --centroids all_combined_seqs.OTUs.fasta --threads 6
+
+#6. map original to OTUs
+vsearch -usearch_global all_combined_seqs.non_chimeras.fasta \
+                -db all_combined_seqs.OTUs.fasta \
+                -strand plus -id 0.95 -uc otu_table_mapping.uc \
+                --threads 8
+
+#7. Make OTU table from uc file (using a modified script from http://drive5.com/python/python_scripts.tar.gz)
+# The modified function is: 
+# def GetSampleId(Label): 
+#    SampleID = Label.split()[0].split('_')[0] 
+#    return SampleID 
+python ~/bin/mod_uc2otutab.py otu_table_mapping.uc > otu_table_mapping.txt
+
+#8. Taxonomy
+parallel_assign_taxonomy_blast.py -O 16 -t /mnt/Data2/unite_qiime/sh_taxonomy_qiime_ver8_dynamic_s_02.02.2019.txt \
+                                                                  -r /mnt/Data2/unite_qiime/sh_refs_qiime_ver8_dynamic_s_02.02.2019.fasta \
+                                                                  -i all_combined_seqs.OTUs.fasta \
+                                                                  -o blast_all_assigned_taxonomy
+
+
+#9. Make otu table biom file
+#using qiime1
+biom convert --table-type="OTU table" -i otu_table_mapping.txt -o otu_table_mapping.biom --to-json
+
+#adding taxonomy
+biom add-metadata --sc-separated taxonomy --observation-header OTUID,taxonomy \
+				  --observation-metadata-fp blast_all_assigned_taxonomy/all_combined_seqs.OTUs_tax_assignments.txt \
+				  -i otu_table_mapping.biom -o otu_table_mapping.tax.biom --output-as-json
+				  
+#adding sample data
+biom add-metadata -m All_mapping_file_corrected.txt -i otu_table_mapping.tax.biom -o otu_table_mapping.tax.sample.biom --output-as-json
