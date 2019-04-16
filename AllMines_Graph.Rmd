@@ -84,7 +84,7 @@ TopNOTUs <- function(sample,N) {
   names(sort(taxa_sums(sample), TRUE)[1:N])
 }
 #Creating data frame from phyloseq object
-top.Mines <- TopNOTUs(Mines_data, 100)
+top.Mines <- TopNOTUs(Mines_data, 50)
 Mines.df <- prune_taxa(top.Mines, Mines_data) %>% psmelt()
 #Sumarize data by site 
 #test <- BGM.df %>% group_by(Genus) %>% summarise(sum(Abundance))
@@ -132,6 +132,14 @@ top10.BGM.df %>%
   summarize (relative_abundance = site_abundance / sample_sums ())
 ### what I am trying to do here is to calculate the relative abundance of each of the otus on different site (and also separated by "Soil" and "Roots"--which is classified under "Seq"). I wanted to use the sample_sums function to give me the overall number of reads from each site. How should I do this?
 
+```
+```{r}
+Genus_soil <- ggplot(data = filter(Mines.df, Seq == "Soil"), aes(Site, Abundance, fill = Genus)) +
+  geom_bar(stat = "identity", position = position_fill()) + coord_flip() +
+    scale_fill_manual(values = (rev(pal(24)))) + 
+    guides(fill = guide_legend(reverse = TRUE, ncol = 1, keyheight = 0.8)) +
+    facet_grid(~ Seq, drop = TRUE) +
+   theme(text = element_text(size = 15)) + theme_gray()
 ```
 
 
@@ -264,11 +272,3 @@ ggdraw() + draw_plot(P, 0, 0.2, 1, 0.8) + draw_plot(legend, 0, -0.35, 1, 1, 2)
 ## I am having issue getting making the font of the texts larger
 ```
 
-```{r, fig.width= 12, fig.height=10, fig.align='center'}
-
-#Filtering Ecto using Funguild
-ecto_OTU <- row.names(test.assign[grepl("Ecto", test.assign$guild),] )
-ecto_Mines <- prune_taxa(ecto_OTU, Mines_data)
-ord.ectoSOB <- phyloseq::ordinate(ecto_Mines, "PCoA", "bray", autotransform = TRUE)
-plot_ordination(ecto_SOB, ord.ectoSOB, color = "Site") + geom_point(size = 3)
-```
