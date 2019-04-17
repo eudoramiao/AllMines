@@ -133,11 +133,20 @@ Genus_soil <- ggplot(data = filter(Mines.df, Seq == "Soil"), aes(Site, Abundance
 
 ```{r}
 #Creating a table modeled after Huang et al. (2012)
+sample_sum.std <- data.frame (sum = sample_sums (all_data0.std))
+sample_sum.std$Sample <- c(rownames (sample_sum.std))
+
 top10.BGM <- TopNOTUs(BGM_field, 10)
 top10.BGM.df <- prune_taxa(top10.BGM, BGM_field) %>% psmelt()
 View (top10.BGM.df)
 
+
+top10.BGM.wsum <- merge (top10.BGM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+
+top10.BGM.wsum$otu_rel_abd <- (top10.BGM.df$Abundance)/(top10.BGM.df$sum)
+
 top10.BGM.df %>%
+  add_column(otu_rel_abd = Abundance/sample_sum.std[rownames(sample_sum.std)==Sample])%>%
   group_by (OTU, Seq, Site) %>%
   summarize (site_abundance = sum (Abundance)) %>%
   summarize (relative_abundance = site_abundance / sample_sums ())
