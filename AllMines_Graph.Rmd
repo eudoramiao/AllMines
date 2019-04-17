@@ -160,9 +160,9 @@ top10.BGM.df <- prune_taxa(top10.BGM, BGM_field) %>% psmelt()
 View (top10.BGM.df)
 
 top10.BGM.df %>%
-  group_by (OTU, Seq, Site) %>%
-  summarize (site_abundance = sum (Abundance)) %>%
-  summarize (relative_abundance = site_abundance / sample_sums ())
+  group_by(OTU, Seq, Site) %>%
+  summarize(site_abundance = sum (Abundance)) %>%
+  summarize(relative_abundance = site_abundance / sample_sums ())
 ### what I am trying to do here is to calculate the relative abundance of each of the otus on different site (and also separated by "Soil" and "Roots"--which is classified under "Seq"). I wanted to use the sample_sums function to give me the overall number of reads from each site. How should I do this?
 
 ```
@@ -174,6 +174,7 @@ top10.BGM.df %>%
 #New variable
 sample_data(BGM_data)$site_type <-
   substr (is.integer(as.integer(substr(sample_data(BGM_data)$Site), -1, -1)))
+
 #Top 100 OTUs
 top100.BGM <- TopNOTUs(BGM_data, 100)
 top100.BGM.ps <- prune_taxa(top100.BGM, BGM_data)
