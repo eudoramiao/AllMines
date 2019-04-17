@@ -146,10 +146,16 @@ top10.BGM.wsum <- merge (top10.BGM.df, sample_sum.std, by.x = "Sample", by.y = "
 top10.BGM.wsum$otu_rel_abd <- (top10.BGM.wsum$Abundance)/(top10.BGM.wsum$sum)*100
 
 top10.BGM.df %>%
+<<<<<<< HEAD
+  group_by(OTU, Seq, Site) %>%
+  summarize(site_abundance = sum (Abundance)) %>%
+  summarize(relative_abundance = site_abundance / sample_sums ())
+=======
   add_column(otu_rel_abd = Abundance/sample_sum.std[rownames(sample_sum.std)==Sample])%>%
   group_by (OTU, Seq, Site) %>%
   summarize (site_abundance = sum (Abundance)) %>%
   summarize (relative_abundance = site_abundance / sample_sums ())
+>>>>>>> 1f1214fe76e063bf00a5d0663f6b3466cbc7b74d
 ### what I am trying to do here is to calculate the relative abundance of each of the otus on different site (and also separated by "Soil" and "Roots"--which is classified under "Seq"). I wanted to use the sample_sums function to give me the overall number of reads from each site. How should I do this?
 
 ```
@@ -161,6 +167,7 @@ top10.BGM.df %>%
 #New variable
 sample_data(BGM_data)$site_type <-
   substr (is.integer(as.integer(substr(sample_data(BGM_data)$Site), -1, -1)))
+
 #Top 100 OTUs
 top100.BGM <- TopNOTUs(BGM_data, 100)
 top100.BGM.ps <- prune_taxa(top100.BGM, BGM_data)
