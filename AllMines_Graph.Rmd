@@ -57,7 +57,7 @@ all_data <- subset_taxa(all_data0.std, Kingdom != "No blast hit")
 ```{r, fig.width= 12, fig.height=6, fig.align='center'}
 #summarizing by tax rank
 all.class <- tax_glom(all_data, "Class")
-plot_bar(all.phylum, fill = "Class", x = "Mine") + theme_gray()
+plot_bar(all.class, fill = "Class", x = "Mine") + theme_gray()
 ```
 
 ## Subsetting datasets by study
