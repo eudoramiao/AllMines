@@ -61,7 +61,7 @@ all_data <- subset_taxa(all_data0.std, Kingdom != "No blast hit")
 ```{r, fig.width= 12, fig.height=6, fig.align='center'}
 #summarizing by tax rank
 all.class <- tax_glom(all_data, "Class")
-plot_bar(all.phylum, fill = "Class", x = "Mine") + theme_gray()
+plot_bar(all.class, fill = "Class", x = "Mine") + theme_gray()
 ```
 
 ## Subsetting datasets by study
@@ -136,7 +136,7 @@ Mines.df$Genus <-  ordered(Mines.df$Genus, levels = c("g__unidentified", "g__Umb
 
 Genus_soil <- ggplot(data = filter(Mines.df, Type == "Soil" & !is.na(Genus))) +
   geom_bar(aes(Site, Abundance, fill = Genus), stat = "identity", position = position_fill()) + coord_flip() +
-    scale_fill_manual(values = c ("#f0f0f0", "#02818a", "#3690c0", "#8c6bb1", "#fcc5c0", "#bd0026", "#fc4e2a","#feb24c", "#ffffcc", "#e5f5e0", "#a1d99b", "#41ab5d", "#006d2c", "#deebf7", "#9ecae1", "#4292c6", "#08519c")) +
+    scale_fill_manual(values = rev(pal(24))) +
     guides(fill = guide_legend(reverse = TRUE, ncol = 1, keyheight = 0.8)) +
     facet_grid(~ Type, drop = TRUE) + 
     theme(text = element_text(size = 15)) + theme_gray()
@@ -184,7 +184,7 @@ top10.BGM.wsum$otu_rel_abd <- (top10.BGM.wsum$Abundance)/(top10.BGM.wsum$sum)*10
 
 top10.BGM.grouped <- group_by(top10.BGM.wsum, Genus, Type, Site)
 
-BGM.genus <- summarise (test, relative_abundance = (sum(Abundance)/sum(sum))*100)
+BGM.genus <- summarise (top10.BGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
 
 View (BGM.genus)
 
@@ -203,7 +203,7 @@ top10.HKM.wsum$otu_rel_abd <- (top10.HKM.wsum$Abundance)/(top10.HKM.wsum$sum)*10
 
 top10.HKM.grouped <- group_by(top10.HKM.wsum, Genus, Type, Site)
 
-HKM.genus <- summarise (test, relative_abundance = (sum(Abundance)/sum(sum))*100)
+HKM.genus <- summarise (top10.HKM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
 
 View (HKM.genus)
 ```
@@ -221,7 +221,7 @@ top10.SH.wsum$otu_rel_abd <- (top10.SH.wsum$Abundance)/(top10.SH.wsum$sum)*100
 
 top10.SH.grouped <- group_by(top10.SH.wsum, Genus, Type, Site)
 
-SH.genus <- summarise (test, relative_abundance = (sum(Abundance)/sum(sum))*100)
+SH.genus <- summarise (top10.SH.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
 
 View (SH.genus)
 ```
@@ -239,10 +239,25 @@ top10.RGM.wsum$otu_rel_abd <- (top10.RGM.wsum$Abundance)/(top10.RGM.wsum$sum)*10
 
 top10.RGM.grouped <- group_by(top10.RGM.wsum, Genus, Type, Site)
 
-RGM.genus <- summarise (test, relative_abundance = (sum(Abundance)/sum(sum))*100)
+RGM.genus <- summarise (top10.RGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
 
 View (RGM.genus)
 ```
+
+#Put the tables together
+```{r}
+All.genus <- rbind (BGM.genus, HKM.genus, SH.genus, RGM.genus)
+View (All.genus)
+
+unique_genus <- unique (All.genus$Genus)
+All.genus.table <- data.frame ("Genus" = unique_genus)
+All.genus.soil <- filter(All.genus, Type == "Soil")
+All.genus.root <- filter(All.genus, Type == "Root")
+list_site <- unique (All.genus$Site)
+All.genus$BGM_1_soil <- NA
+```
+
+
 
 ## Metacoder analysis for different mine field soil samples
 ##BGM
