@@ -47,4 +47,4 @@ biom add-metadata --sc-separated taxonomy --observation-header OTUID,taxonomy \
 				  -i otu_table_mapping.biom -o otu_table_mapping.tax.biom --output-as-json
 				  
 #adding sample data
-biom add-metadata -m All_mapping_file_corrected.txt -i otu_table_mapping.tax.biom -o otu_table_mapping.tax.sample.biom --output-as-json
+biom add-metadata -m All_mapping_file_corrected2.txt -i all_otu_table_mapping.tax.biom -o all_otu_table_mapping.tax.sample.biom --output-as-json
