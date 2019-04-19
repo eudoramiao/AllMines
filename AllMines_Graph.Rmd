@@ -95,37 +95,7 @@ TopNOTUs <- function(sample,N) {
 top.Mines <- TopNOTUs(Mines_data, 100)
 Mines.df <- prune_taxa(top.Mines, Mines_data) %>% psmelt()
 #Sumarize data by site 
-#test <- BGM.df %>% group_by(Genus) %>% summarise(sum(Abundance))
 #plot by relative abundance
-#Plot
-
-pal <- colorRampPalette((brewer.pal(10, "Paired")))
-Genus_soil <- ggplot(data = filter(Mines.df, Type == "Soil"), aes(Site, Abundance, fill = Genus)) +
-  geom_bar(stat = "identity", position = position_fill()) + coord_flip() +
-    scale_fill_manual(values = (rev(pal(24)))) + 
-    guides(fill = guide_legend(reverse = TRUE, ncol = 1, keyheight = 0.8)) +
-    facet_grid(~ Type, drop = TRUE) +
-   theme(text = element_text(size = 15)) + theme_gray()
-Genus_root <- ggplot(data = filter(Mines.df, Type == "Root"), aes(Site, Abundance, fill = Genus)) +
-  geom_bar(stat = "identity", position = position_fill()) + coord_flip() +
-    scale_fill_manual(values = rev(pal(24))) + 
-    guides(fill = FALSE) +
-    facet_grid(~ Type, drop = TRUE) +
-   theme(text = element_text(size = 15)) + theme_gray()
-plot_grid(Genus_root, Genus_soil, align = "h", rel_widths = c(1,1.1))
-Class_soil <-ggplot(data = filter(Mines.df, Type == "Soil"), aes(Site, Abundance, fill = Class)) +
-  geom_bar(stat = "identity", position = position_fill()) + coord_flip() +
-  scale_fill_manual(values = (pal(24))) + 
-  guides(fill = guide_legend(ncol = 1, keyheight = 0.8)) +
-  facet_grid(~ Type, drop = TRUE) +
-  theme(text = element_text(size = 15)) + theme_gray()
-Class_root <-ggplot(data = filter(Mines.df, Type == "Root"), aes(Site, Abundance, fill = Class)) +
-  geom_bar(stat = "identity", position = position_fill()) + coord_flip() +
-  scale_fill_manual(values = (pal(24))) + 
-  guides(fill = FALSE) +  
-  facet_grid(~ Type, drop = TRUE) +
-  theme(text = element_text(size = 15)) + theme_gray()
-plot_grid(Class_root, Class_soil, align = "h", rel_widths = c(1,1.1))
 
 ```
 
@@ -133,6 +103,8 @@ plot_grid(Class_root, Class_soil, align = "h", rel_widths = c(1,1.1))
 ##Trying to stack the genus that belongs to the same class close to each other; also mannually set color so that the genus that belongs to the same class will be grouped in the same group of color
 
 Mines.df$Genus <-  ordered(Mines.df$Genus, levels = c("g__unidentified", "g__Umbelopsis", "g__Mortierella","g__Meliniomyces", "g__Oidiodendron", "g__Elaphomyces", "g__Leptosphaeria", "g__Devriesia", "g__Cenococcum", "g__Archaeorhizomyces", "g__Thelephora",  "g__Russula", "g__Clavulina",  "g__Amphinema", "g__Scleroderma", "g__Rhizopogon", "g__Pisolithus", "g__Boletus", "g__Tricholoma", "g__Laccaria", "g__Cortinarius", "g__Amanita"))
+
+pal <- colorRampPalette((brewer.pal(10, "Paired")))
 
 Genus_soil <- ggplot(data = filter(Mines.df, Type == "Soil" & !is.na(Genus))) +
   geom_bar(aes(Site, Abundance, fill = Genus), stat = "identity", position = position_fill()) + coord_flip() +
@@ -142,49 +114,53 @@ Genus_soil <- ggplot(data = filter(Mines.df, Type == "Soil" & !is.na(Genus))) +
     theme(text = element_text(size = 15)) + theme_gray()
 Genus_root <- ggplot(data = filter(Mines.df, Type == "Root" & !is.na(Genus))) +
   geom_bar(aes(Site, Abundance, fill = Genus), stat = "identity", position = position_fill()) + coord_flip() +
-    scale_fill_manual(values = c ("#f0f0f0", "#02818a", "#3690c0", "#8c6bb1", "#fcc5c0", "#bd0026", "#fc4e2a","#feb24c", "#ffffcc", "#e5f5e0", "#a1d99b", "#41ab5d", "#006d2c", "#deebf7", "#9ecae1", "#4292c6", "#08519c")) +
-    guides(fill = guide_legend(reverse = TRUE, ncol = 1, keyheight = 0.8)) +
+    scale_fill_manual(values = (rev(pal(24)))) +
+    guides(fill = FALSE) +
     facet_grid(~ Type, drop = TRUE) + 
     theme(text = element_text(size = 15)) + theme_gray()
 
-plot_grid(Genus_root, Genus_soil, align = "h", rel_widths = c(1,1.1))
-
-#########I am carefully color coding each of the genus that appeared on the previous genus soil and root graph. Agaricales are blue, Boletales are green, and others... But it is very weird that not all genus that appeared on the previous graph appear on this graph.
-
-###Save in case
-Mines.df$Genus <-  ordered(Mines.df$Genus, levels = c("g__unidentified", "g__Umbelopsis", "g__Mortierella","g__Meliniomyces", "g__Oidiodendron", "g__Elaphomyces", "g__Leptosphaeria", "g__Devriesia", "g__Cenococcum", "g__Archaeorhizomyces", "g__Tricholoma","g__Thelephora", "g__Scleroderma", "g__Russula", "g__Rhizopogon","g__Pisolithus", "g__Laccaria", "g__Cortinarius", "g__Clavulina", "g__Boletus", "g__Amphinema", "g__Amanita"))
-Genus_soil <- ggplot(data = filter(Mines.df, Type == "Soil" & !is.na(Genus))) +
-  geom_bar(aes(Site, Abundance, fill = Genus), stat = "identity", position = position_fill()) + coord_flip() +
-    scale_fill_manual(values = c ("#969696", "#fed976", "#6a51a3", "#fd8d3c", "#d94801","#6baed6", "#2171b5", "#e5f5e0", "#c7e9c0", "#a1d99b", "#74c476", "#41ab5d", "#238b45", "#006d2c", "#00441b")) +
-    guides(fill = guide_legend(reverse = TRUE, ncol = 1, keyheight = 0.8)) +
-    facet_grid(~ Type, drop = TRUE) + 
-    theme(text = element_text(size = 15)) + theme_gray()
-
-
-Genus_soil
-
+plot_grid(Genus_root, Genus_soil, align = "h", rel_widths = c(1,1.4))
 
 ```
+
+```{r}
+#Plot class level
+Class_soil <-ggplot(data = filter(Mines.df, Type == "Soil"), aes(Site, Abundance, fill = Class)) +
+  geom_bar(stat = "identity", position = position_fill()) + coord_flip() +
+  scale_fill_manual(values = (pal(24))) + 
+  guides(fill = guide_legend(ncol = 1, keyheight = 0.8)) +
+  facet_grid(~ Type, drop = TRUE) +
+  theme(text = element_text(size = 30), axis.text = element_text (size = 30)) + 
+  theme_gray()
+Class_root <-ggplot(data = filter(Mines.df, Type == "Root"), aes(Site, Abundance, fill = Class)) +
+  geom_bar(stat = "identity", position = position_fill()) + coord_flip() +
+  scale_fill_manual(values = (pal(24))) + 
+  guides(fill = FALSE) +  
+  facet_grid(~ Type, drop = TRUE) +
+  theme(text = element_text(size = 30), axis.text = element_text (size = 30)) + 
+  theme_gray()
+plot_grid(Class_root, Class_soil, align = "h", rel_widths = c(1,1.4))
+```
+
 
 #Creating a table modeled after Huang et al. (2012)
 #BGM
 ```{r}
-
-sample_sum.std <- data.frame(sum = sample_sums (all_data0.std))
+sample_sum.std <- data.frame(sum = sample_sums (all_data))
 sample_sum.std$Sample <- c(rownames (sample_sum.std))
 
 #Using BGM_mine dataset to extract top 10 OTUs on the mine sites
-top10.BGM <- TopNOTUs(BGM_mine, 10)
+top100.BGM <- TopNOTUs(BGM_mine, 100)
 #Then use BGM_field dataset to pull these taxa from both mine sites and forest site
-top10.BGM.df <- prune_taxa(top10.BGM, BGM_field) %>% psmelt()
+top100.BGM.df <- prune_taxa(top100.BGM, BGM_field) %>% psmelt()
 
-top10.BGM.wsum <- merge(top10.BGM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+top100.BGM.wsum <- merge(top100.BGM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
 
-top10.BGM.wsum$otu_rel_abd <- (top10.BGM.wsum$Abundance)/(top10.BGM.wsum$sum)*100
+top100.BGM.wsum$otu_rel_abd <- (top100.BGM.wsum$Abundance)/(top100.BGM.wsum$sum)*100
 
-top10.BGM.grouped <- group_by(top10.BGM.wsum, Genus, Type, Site)
+top100.BGM.grouped <- group_by(top100.BGM.wsum, Genus, Type, Site)
 
-BGM.genus <- summarise (top10.BGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
+BGM.genus <- summarise (top100.BGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
 
 View (BGM.genus)
 
@@ -193,17 +169,17 @@ View (BGM.genus)
 #HKM
 ```{r}
 #Using HKM_mine dataset to extract top 10 OTUs on the mine sites
-top10.HKM <- TopNOTUs(HKM_mine, 10)
+top100.HKM <- TopNOTUs(HKM_mine, 100)
 #Then use HKM_field dataset to pull these taxa from both mine sites and forest site
-top10.HKM.df <- prune_taxa(top10.HKM, HKM_field) %>% psmelt()
+top100.HKM.df <- prune_taxa(top100.HKM, HKM_field) %>% psmelt()
 
-top10.HKM.wsum <- merge(top10.HKM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+top100.HKM.wsum <- merge(top100.HKM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
 
-top10.HKM.wsum$otu_rel_abd <- (top10.HKM.wsum$Abundance)/(top10.HKM.wsum$sum)*100
+top100.HKM.wsum$otu_rel_abd <- (top100.HKM.wsum$Abundance)/(top100.HKM.wsum$sum)*100
 
-top10.HKM.grouped <- group_by(top10.HKM.wsum, Genus, Type, Site)
+top100.HKM.grouped <- group_by(top100.HKM.wsum, Genus, Type, Site)
 
-HKM.genus <- summarise (top10.HKM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
+HKM.genus <- summarise (top100.HKM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
 
 View (HKM.genus)
 ```
@@ -211,17 +187,17 @@ View (HKM.genus)
 #SH
 ```{r}
 #Using BGM_mine dataset to extract top 10 OTUs on the mine sites
-top10.SH <- TopNOTUs(SH_mine, 10)
+top100.SH <- TopNOTUs(SH_mine, 100)
 #Then use BGM_field dataset to pull these taxa from both mine sites and forest site
-top10.SH.df <- prune_taxa(top10.SH, SH_field) %>% psmelt()
+top100.SH.df <- prune_taxa(top100.SH, SH_field) %>% psmelt()
 
-top10.SH.wsum <- merge(top10.SH.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+top100.SH.wsum <- merge(top100.SH.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
 
-top10.SH.wsum$otu_rel_abd <- (top10.SH.wsum$Abundance)/(top10.SH.wsum$sum)*100
+top100.SH.wsum$otu_rel_abd <- (top100.SH.wsum$Abundance)/(top100.SH.wsum$sum)*100
 
-top10.SH.grouped <- group_by(top10.SH.wsum, Genus, Type, Site)
+top100.SH.grouped <- group_by(top100.SH.wsum, Genus, Type, Site)
 
-SH.genus <- summarise (top10.SH.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
+SH.genus <- summarise (top100.SH.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
 
 View (SH.genus)
 ```
@@ -229,17 +205,17 @@ View (SH.genus)
 #RGM
 ```{r}
 #RGM_data dataset is used here to extract top 10 OTUs on the mine sites because all RGM samples came from mine sites
-top10.RGM <- TopNOTUs(RGM_data, 10)
+top100.RGM <- TopNOTUs(RGM_data, 100)
 #Then use BGM_field dataset to pull these taxa from both mine sites and forest site
-top10.RGM.df <- prune_taxa(top10.RGM, RGM_data) %>% psmelt()
+top100.RGM.df <- prune_taxa(top100.RGM, RGM_data) %>% psmelt()
 
-top10.RGM.wsum <- merge(top10.RGM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+top100.RGM.wsum <- merge(top100.RGM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
 
-top10.RGM.wsum$otu_rel_abd <- (top10.RGM.wsum$Abundance)/(top10.RGM.wsum$sum)*100
+top100.RGM.wsum$otu_rel_abd <- (top100.RGM.wsum$Abundance)/(top100.RGM.wsum$sum)*100
 
-top10.RGM.grouped <- group_by(top10.RGM.wsum, Genus, Type, Site)
+top100.RGM.grouped <- group_by(top100.RGM.wsum, Genus, Type, Site)
 
-RGM.genus <- summarise (top10.RGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
+RGM.genus <- summarise (top100.RGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
 
 View (RGM.genus)
 ```
@@ -247,14 +223,11 @@ View (RGM.genus)
 #Put the tables together
 ```{r}
 All.genus <- rbind (BGM.genus, HKM.genus, SH.genus, RGM.genus)
-View (All.genus)
+write.csv (All.genus, file = "All.genus.csv")
 
 unique_genus <- unique (All.genus$Genus)
-All.genus.table <- data.frame ("Genus" = unique_genus)
-All.genus.soil <- filter(All.genus, Type == "Soil")
-All.genus.root <- filter(All.genus, Type == "Root")
-list_site <- unique (All.genus$Site)
-All.genus$BGM_1_soil <- NA
+unique_genus
+
 ```
 
 
