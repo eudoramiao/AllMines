@@ -19,6 +19,7 @@ library(vegan)
 library(knitr)
 library(kableExtra)
 library(ggrepel)
+
 all_data0 <- import_biom(BIOMfilename = "all_otu_table_mapping.tax.sample2.biom")
 all_data0
 ```
@@ -70,16 +71,20 @@ plot_bar(all.class, fill = "Class", x = "Mine") + theme_gray()
 SH_data <- subset_samples(all_data, grepl("SH", sample_data(all_data)$Mine))
 SH_field <- subset_samples(SH_data, grepl("Field", sample_data(SH_data)$Collection))
 SH_mine <- subset_samples(SH_field, grepl("Mine", sample_data(SH_field)$Treatment))
+
 #BGM dataset
 BGM_data <- subset_samples(all_data, grepl("BGM", sample_data(all_data)$Mine))
 BGM_field <- subset_samples(BGM_data, grepl("Field", sample_data(BGM_data)$Collection))
 BGM_mine <- subset_samples(BGM_field, grepl("Mine", sample_data(BGM_field)$Treatment))
+
 #HKM dataset
 HKM_data <- subset_samples(all_data, grepl("HKM", sample_data(all_data)$Mine))
 HKM_field <- subset_samples(HKM_data, grepl("Field", sample_data(HKM_data)$Collection))
 HKM_mine <- subset_samples(HKM_field, grepl("Mine", sample_data(HKM_field)$Treatment))
+
 #RGM dataset
 RGM_data <- subset_samples(all_data, grepl("RGM", sample_data(all_data)$Mine))
+
 #Mines (four mines field data combined)
 Mines_data <- subset_samples(all_data, grepl("Field", sample_data(all_data)$Collection))
 ```
@@ -100,32 +105,40 @@ Mines.df <- prune_taxa(top.Mines, Mines_data) %>% psmelt()
 #Plot
 
 pal <- colorRampPalette((brewer.pal(10, "Paired")))
+
+## Genus plot root vs soil
 Genus_soil <- ggplot(data = filter(Mines.df, Type == "Soil"), aes(Site, Abundance, fill = Genus)) +
   geom_bar(stat = "identity", position = position_fill()) + coord_flip() +
     scale_fill_manual(values = (rev(pal(24)))) + 
     guides(fill = guide_legend(reverse = TRUE, ncol = 1, keyheight = 0.8)) +
     facet_grid(~ Type, drop = TRUE) +
    theme(text = element_text(size = 15)) + theme_gray()
+
 Genus_root <- ggplot(data = filter(Mines.df, Type == "Root"), aes(Site, Abundance, fill = Genus)) +
   geom_bar(stat = "identity", position = position_fill()) + coord_flip() +
     scale_fill_manual(values = rev(pal(24))) + 
     guides(fill = FALSE) +
     facet_grid(~ Type, drop = TRUE) +
    theme(text = element_text(size = 15)) + theme_gray()
-plot_grid(Genus_root, Genus_soil, align = "h", rel_widths = c(1,1.1))
+
+plot_grid(Genus_root, Genus_soil, align = "h", rel_widths = c(1,1.4))
+
+## Class plot root vs soil
 Class_soil <-ggplot(data = filter(Mines.df, Type == "Soil"), aes(Site, Abundance, fill = Class)) +
   geom_bar(stat = "identity", position = position_fill()) + coord_flip() +
   scale_fill_manual(values = (pal(24))) + 
   guides(fill = guide_legend(ncol = 1, keyheight = 0.8)) +
   facet_grid(~ Type, drop = TRUE) +
   theme(text = element_text(size = 15)) + theme_gray()
+
 Class_root <-ggplot(data = filter(Mines.df, Type == "Root"), aes(Site, Abundance, fill = Class)) +
   geom_bar(stat = "identity", position = position_fill()) + coord_flip() +
   scale_fill_manual(values = (pal(24))) + 
   guides(fill = FALSE) +  
   facet_grid(~ Type, drop = TRUE) +
   theme(text = element_text(size = 15)) + theme_gray()
-plot_grid(Class_root, Class_soil, align = "h", rel_widths = c(1,1.1))
+
+plot_grid(Class_root, Class_soil, align = "h", rel_widths = c(1,1.4))
 
 ```
 
@@ -134,40 +147,46 @@ plot_grid(Class_root, Class_soil, align = "h", rel_widths = c(1,1.1))
 
 Mines.df$Genus <-  ordered(Mines.df$Genus, levels = c("g__unidentified", "g__Umbelopsis", "g__Mortierella","g__Meliniomyces", "g__Oidiodendron", "g__Elaphomyces", "g__Leptosphaeria", "g__Devriesia", "g__Cenococcum", "g__Archaeorhizomyces", "g__Thelephora",  "g__Russula", "g__Clavulina",  "g__Amphinema", "g__Scleroderma", "g__Rhizopogon", "g__Pisolithus", "g__Boletus", "g__Tricholoma", "g__Laccaria", "g__Cortinarius", "g__Amanita"))
 
-Genus_soil <- ggplot(data = filter(Mines.df, Type == "Soil" & !is.na(Genus))) +
-  geom_bar(aes(Site, Abundance, fill = Genus), stat = "identity", position = position_fill()) + coord_flip() +
+(Genus_soil <- ggplot(data = filter(Mines.df, Type == "Soil")) +
+    geom_bar(aes(Site, Abundance, fill = Genus), stat = "identity", position = position_fill()) +
+    coord_flip() +
     scale_fill_manual(values = rev(pal(24))) +
     guides(fill = guide_legend(reverse = TRUE, ncol = 1, keyheight = 0.8)) +
     facet_grid(~ Type, drop = TRUE) + 
-    theme(text = element_text(size = 15)) + theme_gray()
-Genus_root <- ggplot(data = filter(Mines.df, Type == "Root" & !is.na(Genus))) +
-  geom_bar(aes(Site, Abundance, fill = Genus), stat = "identity", position = position_fill()) + coord_flip() +
-    scale_fill_manual(values = c ("#f0f0f0", "#02818a", "#3690c0", "#8c6bb1", "#fcc5c0", "#bd0026", "#fc4e2a","#feb24c", "#ffffcc", "#e5f5e0", "#a1d99b", "#41ab5d", "#006d2c", "#deebf7", "#9ecae1", "#4292c6", "#08519c")) +
-    guides(fill = guide_legend(reverse = TRUE, ncol = 1, keyheight = 0.8)) +
-    facet_grid(~ Type, drop = TRUE) + 
-    theme(text = element_text(size = 15)) + theme_gray()
+    theme(text = element_text(size = 15)) + theme_gray())
 
-plot_grid(Genus_root, Genus_soil, align = "h", rel_widths = c(1,1.1))
+(Genus_root <- ggplot(data = filter(Mines.df, Type == "Root")) +
+  geom_bar(aes(Site, Abundance, fill = Genus), stat = "identity", position = position_fill()) + coord_flip() +
+    scale_fill_manual(values = rev(pal(24))) +
+    #guides(fill = guide_legend(reverse = TRUE, ncol = 1, keyheight = 0.8)) +
+    guides(fill = FALSE) +
+    facet_grid(~ Type, drop = TRUE) + 
+    theme(text = element_text(size = 15)) + theme_gray())
+
+plot_grid(Genus_root, Genus_soil, align = "h", rel_widths = c(0.9,1.5))
 
 #########I am carefully color coding each of the genus that appeared on the previous genus soil and root graph. Agaricales are blue, Boletales are green, and others... But it is very weird that not all genus that appeared on the previous graph appear on this graph.
 
+### You pre-selecting the order of the genera, some your may be discarding some of the genera that appear on the previous graph
+
 ###Save in case
-Mines.df$Genus <-  ordered(Mines.df$Genus, levels = c("g__unidentified", "g__Umbelopsis", "g__Mortierella","g__Meliniomyces", "g__Oidiodendron", "g__Elaphomyces", "g__Leptosphaeria", "g__Devriesia", "g__Cenococcum", "g__Archaeorhizomyces", "g__Tricholoma","g__Thelephora", "g__Scleroderma", "g__Russula", "g__Rhizopogon","g__Pisolithus", "g__Laccaria", "g__Cortinarius", "g__Clavulina", "g__Boletus", "g__Amphinema", "g__Amanita"))
-Genus_soil <- ggplot(data = filter(Mines.df, Type == "Soil" & !is.na(Genus))) +
-  geom_bar(aes(Site, Abundance, fill = Genus), stat = "identity", position = position_fill()) + coord_flip() +
-    scale_fill_manual(values = c ("#969696", "#fed976", "#6a51a3", "#fd8d3c", "#d94801","#6baed6", "#2171b5", "#e5f5e0", "#c7e9c0", "#a1d99b", "#74c476", "#41ab5d", "#238b45", "#006d2c", "#00441b")) +
-    guides(fill = guide_legend(reverse = TRUE, ncol = 1, keyheight = 0.8)) +
-    facet_grid(~ Type, drop = TRUE) + 
-    theme(text = element_text(size = 15)) + theme_gray()
-
-
-Genus_soil
+# Mines.df$Genus <-  ordered(Mines.df$Genus, levels = c("g__unidentified", "g__Umbelopsis", "g__Mortierella","g__Meliniomyces", "g__Oidiodendron", "g__Elaphomyces", "g__Leptosphaeria", "g__Devriesia", "g__Cenococcum", "g__Archaeorhizomyces", "g__Tricholoma","g__Thelephora", "g__Scleroderma", "g__Russula", "g__Rhizopogon","g__Pisolithus", "g__Laccaria", "g__Cortinarius", "g__Clavulina", "g__Boletus", "g__Amphinema", "g__Amanita"))
+# Genus_soil <- ggplot(data = filter(Mines.df, Type == "Soil" & !is.na(Genus))) +
+#   geom_bar(aes(Site, Abundance, fill = Genus), stat = "identity", position = position_fill()) + coord_flip() +
+#     scale_fill_manual(values = c ("#969696", "#fed976", "#6a51a3", "#fd8d3c", "#d94801","#6baed6", "#2171b5", "#e5f5e0", "#c7e9c0", "#a1d99b", "#74c476", "#41ab5d", "#238b45", "#006d2c", "#00441b")) +
+#     guides(fill = guide_legend(reverse = TRUE, ncol = 1, keyheight = 0.8)) +
+#     facet_grid(~ Type, drop = TRUE) + 
+#     theme(text = element_text(size = 15)) + theme_gray()
+# 
+# 
+# Genus_soil
 
 
 ```
 
 #Creating a table modeled after Huang et al. (2012)
 #BGM
+
 ```{r}
 
 sample_sum.std <- data.frame(sum = sample_sums (all_data0.std))
@@ -191,6 +210,7 @@ View (BGM.genus)
 ```
 
 #HKM
+
 ```{r}
 #Using HKM_mine dataset to extract top 10 OTUs on the mine sites
 top10.HKM <- TopNOTUs(HKM_mine, 10)
@@ -261,7 +281,9 @@ All.genus$BGM_1_soil <- NA
 
 ## Metacoder analysis for different mine field soil samples
 ##BGM
-##########I'd wanna change the color to be brown (mine site) and green (forest site), because it is more intuitive--any suggestion? Do I flip the color range?
+I'd wanna change the color to be brown (mine site) and green (forest site), because it is more intuitive--any suggestion? Do I flip the color range?
+
+R/ 
 
 ```{r, warning=FALSE, message=FALSE}
 #Top 100 OTUs
