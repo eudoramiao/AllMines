@@ -187,31 +187,38 @@ plot_grid(Genus_root, Genus_soil, align = "h", rel_widths = c(0.9,1.5))
 #Creating a table modeled after Huang et al. (2012)
 #BGM
 
-```{r}
-
-sample_sum.std <- data.frame(sum = sample_sums (all_data0.std))
-sample_sum.std$Sample <- c(rownames (sample_sum.std))
-
+```{r, eval=FALSE}
 #Using BGM_mine dataset to extract top 10 OTUs on the mine sites
-top10.BGM <- TopNOTUs(BGM_mine, 10)
+top10.BGM <- TopNOTUs(BGM_mine, 25) 
+#Extracting the top 10 OTUs is only 3 species
+
+# Transform to relative abundance
+#BGM.rel <- transform_sample_counts(BGM_field, function(x) 100 * x/sum(x))
 #Then use BGM_field dataset to pull these taxa from both mine sites and forest site
-top10.BGM.df <- prune_taxa(top10.BGM, BGM_field) %>% psmelt()
+#top10.BGM.df <- prune_taxa(top10.BGM, BGM.rel) %>% psmelt()
+
+top10.BGM.df <- psmelt(BGM_field)
+  
+#Create data frame
+top10.BGM.df %>%
+  group_by(Group, Type, Genus) %>% 
+  summarise(n = n(),
+            Abd = sum(Abundance))
+ top10.BGM.df %>%
+   group_by(Group) %>%
+   summarise(total = sum(Abundance))
 
 top10.BGM.wsum <- merge(top10.BGM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
-
 top10.BGM.wsum$otu_rel_abd <- (top10.BGM.wsum$Abundance)/(top10.BGM.wsum$sum)*100
-
 top10.BGM.grouped <- group_by(top10.BGM.wsum, Genus, Type, Site)
-
-BGM.genus <- summarise (top10.BGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
-
-View (BGM.genus)
+BGM.genus <- summarise(top10.BGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
+View(BGM.genus)
 
 ```
 
 #HKM
 
-```{r}
+```{r, eval=FALSE}
 #Using HKM_mine dataset to extract top 10 OTUs on the mine sites
 top10.HKM <- TopNOTUs(HKM_mine, 10)
 #Then use HKM_field dataset to pull these taxa from both mine sites and forest site
@@ -229,7 +236,7 @@ View (HKM.genus)
 ```
 
 #SH
-```{r}
+```{r, eval=FALSE}
 #Using BGM_mine dataset to extract top 10 OTUs on the mine sites
 top10.SH <- TopNOTUs(SH_mine, 10)
 #Then use BGM_field dataset to pull these taxa from both mine sites and forest site
@@ -247,7 +254,7 @@ View (SH.genus)
 ```
 
 #RGM
-```{r}
+```{r, eval=FALSE}
 #RGM_data dataset is used here to extract top 10 OTUs on the mine sites because all RGM samples came from mine sites
 top10.RGM <- TopNOTUs(RGM_data, 10)
 #Then use BGM_field dataset to pull these taxa from both mine sites and forest site
@@ -265,7 +272,7 @@ View (RGM.genus)
 ```
 
 #Put the tables together
-```{r}
+```{r, eval=FALSE}
 All.genus <- rbind (BGM.genus, HKM.genus, SH.genus, RGM.genus)
 View (All.genus)
 
@@ -282,8 +289,7 @@ All.genus$BGM_1_soil <- NA
 ## Metacoder analysis for different mine field soil samples
 ##BGM
 I'd wanna change the color to be brown (mine site) and green (forest site), because it is more intuitive--any suggestion? Do I flip the color range?
-
-R/ 
+__R/__ You only have to change `node_color_range` to invert the colro scale.  I already id, so now Mine is brown and forest sites are green.
 
 ```{r, warning=FALSE, message=FALSE}
 #Top 100 OTUs
@@ -306,24 +312,25 @@ obj.BGM$data$diff_table <- compare_groups(obj.BGM,
                                           groups = obj.BGM$data$sample_data$Treatment)
 ```
 
-```{r, fig.width= 12, fig.height=12, fig.align='center'}
+
+```{r, fig.width= 12, fig.height=12, fig.align='center', warning=FALSE, message=FALSE}
 #Tree visual
 set.seed(1)
-
+#I change the order of these colors, that controls the color of the graph
 Tree.BGM <- metacoder::heat_tree(taxa::filter_taxa(obj.BGM, taxon_names == "c__Agaricomycetes", subtaxa = TRUE),
-          node_size = n_obs, 
-          node_label = taxon_names,
-          node_color = log2_median_ratio,
-          node_color_range = c("#a6611a","#dfc27d","#bdbdbd","#80cdc1","#018571"), 
-          node_color_trans = "linear",
-          node_label_max = 120,
-          node_color_interval = c(-1, 1),
-          edge_color_interval = c(-1, 1),
-          node_size_axis_label = "Number of OTUs",
-          node_color_axis_label = "Log2 ratio median proportions",
-          title = "BGM Mine and Forest Site Differences",
-          title_size = 0.03,
-          initial_layout = "reingold-tilford", layout = "davidson-harel")
+                                 node_size = n_obs, 
+                                 node_label = taxon_names,
+                                 node_color = log2_median_ratio,
+                                 node_color_range = c("#018571", "#80cdc1", "#bdbdbd", "#dfc27d", "#a6611a"), 
+                                 node_color_trans = "linear",
+                                 node_label_max = 120,
+                                 node_color_interval = c(-1, 1),
+                                 edge_color_interval = c(-1, 1),
+                                 node_size_axis_label = "Number of OTUs",
+                                 node_color_axis_label = "Log2 ratio median proportions",
+                                 title = "BGM Mine and Forest Site Differences",
+                                 title_size = 0.03,
+                                 initial_layout = "reingold-tilford", layout = "davidson-harel")
 Tree.BGM
 ```
 ##HKM
@@ -349,24 +356,25 @@ obj.HKM$data$diff_table <- compare_groups(obj.HKM,
                                           groups = obj.HKM$data$sample_data$Treatment)
 ```
 
-```{r, fig.width= 12, fig.height=12, fig.align='center'}
+```{r, fig.width= 12, fig.height=12, fig.align='center', warning=FALSE, message=FALSE}
 #Tree visual
 set.seed(1)
 
 Tree.HKM <- metacoder::heat_tree(taxa::filter_taxa(obj.HKM, taxon_names == "c__Agaricomycetes", subtaxa = TRUE),
-          node_size = n_obs, 
-          node_label = taxon_names,
-          node_color = log2_median_ratio,
-          node_color_range = c("#a6611a","#dfc27d","#bdbdbd","#80cdc1","#018571"), 
-          node_color_trans = "linear",
-          node_label_max = 120,
-          node_color_interval = c(-1, 1),
-          edge_color_interval = c(-1, 1),
-          node_size_axis_label = "Number of OTUs",
-          node_color_axis_label = "Log2 ratio median proportions",
-          title = "HKM Mine and Forest Site Differences",
-          title_size = 0.03,
-          initial_layout = "reingold-tilford", layout = "davidson-harel")
+                                 node_size = n_obs, 
+                                 node_label = taxon_names,
+                                 node_color = log2_median_ratio,
+                                 node_color_range = c("#018571", "#80cdc1", "#bdbdbd", "#dfc27d", "#a6611a"), 
+                                 node_color_trans = "linear",
+                                 node_label_max = 120,
+                                 node_color_interval = c(-1, 1),
+                                 edge_color_interval = c(-1, 1),
+                                 node_size_axis_label = "Number of OTUs",
+                                 node_color_axis_label = "Log2 ratio median proportions",
+                                 title = "HKM Mine and Forest Site Differences",
+                                 title_size = 0.03,
+                                 initial_layout = "reingold-tilford", layout = "davidson-harel")
+
 Tree.HKM
 ```
 
@@ -393,26 +401,32 @@ obj.SH$data$diff_table <- compare_groups(obj.SH,
                                           groups = obj.SH$data$sample_data$Treatment)
 ```
 
-```{r, fig.width= 12, fig.height=12, fig.align='center'}
+```{r, fig.width= 12, fig.height=12, fig.align='center', warning=FALSE, message=FALSE}
 #Tree visual
 set.seed(1)
 
 Tree.SH <- metacoder::heat_tree(taxa::filter_taxa(obj.HKM, taxon_names == "c__Agaricomycetes", subtaxa = TRUE),
-          node_size = n_obs, 
-          node_label = taxon_names,
-          node_color = log2_median_ratio,
-          node_color_range = c("#a6611a","#dfc27d","#bdbdbd","#80cdc1","#018571"), 
-          node_color_trans = "linear",
-          node_label_max = 120,
-          node_color_interval = c(-1, 1),
-          edge_color_interval = c(-1, 1),
-          node_size_axis_label = "Number of OTUs",
-          node_color_axis_label = "Log2 ratio median proportions",
-          title = "SH Mine and Forest Site Differences",
-          title_size = 0.03,
-          initial_layout = "reingold-tilford", layout = "davidson-harel")
+                                node_size = n_obs, 
+                                node_label = taxon_names,
+                                node_color = log2_median_ratio,
+                                node_color_range = c("#018571", "#80cdc1", "#bdbdbd", "#dfc27d", "#a6611a"), 
+                                node_color_trans = "linear",
+                                node_label_max = 120,
+                                node_color_interval = c(-1, 1),
+                                edge_color_interval = c(-1, 1),
+                                node_size_axis_label = "Number of OTUs",
+                                node_color_axis_label = "Log2 ratio median proportions",
+                                title = "SH Mine and Forest Site Differences",
+                                title_size = 0.03,
+                                initial_layout = "reingold-tilford", layout = "davidson-harel")
 Tree.SH
 ```
+
+### Final plot of metacode
+```{r}
+plot_grid(Tree.BGM, Tree.HKM, Tree.SH, align = "h", nrow = 1, ncol = 3, rel_widths = c(1, 1 ,1))
+```
+
 
 ## Funguild analysis of BGM soil and root samples
 
@@ -441,7 +455,6 @@ test.assign <- fg_assign(test) %>%
 
 ```{r, warning=FALSE, message=FALSE}
 #Assigning guild to the tax table
-
 new_tax <- data.frame(tax_table(Mines_data)) %>% 
   rownames_to_column(var = "OTU") %>% 
   left_join(test.assign[,c("OTU","guild")], by = "OTU") %>% 
@@ -452,37 +465,43 @@ new_tax.0 <- tax_table(as.matrix(new_tax))
 tax_table(Mines_data) <- new_tax.0
 ```
 
-```{r, fig.width= 12, fig.height=10, fig.align='center'}
+```{r, fig.width= 12, fig.height=10, fig.align='center', warning=FALSE}
 #Plotting abudance by guild
 #Creating data frame from phyloseq object
 top.Mines <- TopNOTUs(Mines_data, 100)
 Mines.df <- prune_taxa(top.Mines, Mines_data) %>% psmelt()
 #Plot
 pal <- colorRampPalette((brewer.pal(8, "Paired")))
-Guild_soil <- ggplot(data = filter(Mines.df, Seq == "Soil" & !is.na(guild)), aes(Site, Abundance, fill = guild)) +
-  geom_bar(stat = "identity", position = position_fill()) + coord_flip() +
-  scale_fill_manual(values = pal(16)) + 
-  guides(fill = guide_legend(ncol = 3, keyheight = 0.6)) +
-  facet_grid(~ Seq, drop = TRUE) +
-  theme(text = element_text(size=40), axis.text.x = element_text(size = 40), legend.text = element_text(size=40)) +
-  theme_gray()
+
+Guild_soil <- ggplot(data = filter(Mines.df, Type == "Soil" & !is.na(guild)), aes(Site, Abundance, fill = guild)) +
+    geom_bar(stat = "identity", position = position_fill()) + coord_flip() +
+    scale_fill_manual(values = pal(10)) + 
+    facet_grid(~ Type, drop = TRUE) +
+    theme_gray() +
+    theme(text = element_text(size = 20), 
+          #axis.text.x = element_text(size = 10), 
+          legend.text = element_text(size = 8),
+          legend.position = "right") +
+    guides(fill = guide_legend(ncol = 3, keyheight = 0.6))
+
 Guild_soil.0 <- Guild_soil + theme(legend.position = "none")
 Guild_soil.1 <- Guild_soil + theme(legend.position = "bottom")
 
-Guild_root <- ggplot(data = filter(Mines.df, Seq == "Root" & !is.na(guild)), aes(Site, Abundance, fill = guild)) +
+Guild_root <- ggplot(data = filter(Mines.df, Type == "Root" & !is.na(guild)), aes(Site, Abundance, fill = guild)) +
   geom_bar(stat = "identity", position = position_fill()) + coord_flip() +
-  scale_fill_manual(values = pal(16)) + 
+  scale_fill_manual(values = pal(10)) + 
   guides(fill = FALSE) +
-  facet_grid(~ Seq, drop = TRUE) +
-  theme(text = element_text(size=40), axis.text.x = element_text(size = 40), legend.text = element_text(size=40)) + 
-  theme_gray()
-
+  facet_grid(~ Type, drop = TRUE) +
+  theme_gray() +
+  theme(text = element_text(size = 20))
+  
 
 legend <- get_legend(Guild_soil.1)
-P <- plot_grid(Guild_root, Guild_soil.0, align = "h", rel_heights = c(0.7,0.7))
+P <- plot_grid(Guild_root, Guild_soil.0, align = "h", rel_heights = c(1,1))
 ggdraw() + draw_plot(P, 0, 0.2, 1, 0.8) + draw_plot(legend, 0, -0.35, 1, 1, 2)
 
 ## I am having issue getting making the font of the texts larger
+### The order of your parameters were causing issues
 ```
 
 ##PCoA!
@@ -572,10 +591,10 @@ ord.plot.env
 
 ##Relative Abundance of top 10 genus
 ```{r}
-library (ampvis2)
+library(ampvis)
 top.BGM <- TopNOTUs(BGM_field, 100)
 BGM.df <- prune_taxa(top.BGM, BGM_field) %>% psmelt()
-BGM.amp <- amp_load (BGM.df)
+BGM.amp <- amp_load(BGM.df)
 amp_heatmap(data = BGM.amp,
             group_by = "Site",
             tax_show = 10,
