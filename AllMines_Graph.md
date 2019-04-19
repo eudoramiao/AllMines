@@ -127,17 +127,6 @@ TopNOTUs <- function(sample,N) {
 #Creating data frame from phyloseq object
 top.Mines <- TopNOTUs(Mines_data, 100)
 Mines.df <- prune_taxa(top.Mines, Mines_data) %>% psmelt()
-```
-
-```
-## Warning in psmelt(.): The sample variables: 
-## Sample
-##  have been renamed to: 
-## sample_Sample
-## to avoid conflicts with special phyloseq plot attribute names.
-```
-
-```r
 #Sumarize data by site 
 #test <- BGM.df %>% group_by(Genus) %>% summarise(sum(Abundance))
 #plot by relative abundance
@@ -192,34 +181,26 @@ plot_grid(Class_root, Class_soil, align = "h", rel_widths = c(1,1.4))
 
 Mines.df$Genus <-  ordered(Mines.df$Genus, levels = c("g__unidentified", "g__Umbelopsis", "g__Mortierella","g__Meliniomyces", "g__Oidiodendron", "g__Elaphomyces", "g__Leptosphaeria", "g__Devriesia", "g__Cenococcum", "g__Archaeorhizomyces", "g__Thelephora",  "g__Russula", "g__Clavulina",  "g__Amphinema", "g__Scleroderma", "g__Rhizopogon", "g__Pisolithus", "g__Boletus", "g__Tricholoma", "g__Laccaria", "g__Cortinarius", "g__Amanita"))
 
-(Genus_soil <- ggplot(data = filter(Mines.df, Type == "Soil")) +
+Genus_soil <- ggplot(data = filter(Mines.df, Type == "Soil")) +
     geom_bar(aes(Site, Abundance, fill = Genus), stat = "identity", position = position_fill()) +
     coord_flip() +
     scale_fill_manual(values = rev(pal(24))) +
     guides(fill = guide_legend(reverse = TRUE, ncol = 1, keyheight = 0.8)) +
     facet_grid(~ Type, drop = TRUE) + 
-    theme(text = element_text(size = 15)) + theme_gray())
-```
+    theme(text = element_text(size = 15)) + theme_gray()
 
-![](AllMines_Graph_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
-
-```r
-(Genus_root <- ggplot(data = filter(Mines.df, Type == "Root")) +
+Genus_root <- ggplot(data = filter(Mines.df, Type == "Root")) +
   geom_bar(aes(Site, Abundance, fill = Genus), stat = "identity", position = position_fill()) + coord_flip() +
     scale_fill_manual(values = rev(pal(24))) +
     #guides(fill = guide_legend(reverse = TRUE, ncol = 1, keyheight = 0.8)) +
     guides(fill = FALSE) +
     facet_grid(~ Type, drop = TRUE) + 
-    theme(text = element_text(size = 15)) + theme_gray())
+    theme(text = element_text(size = 15)) + theme_gray()
+
+plot_grid(Genus_root, Genus_soil, align = "h", rel_widths = c(0.9,1.3))
 ```
 
-![](AllMines_Graph_files/figure-html/unnamed-chunk-8-2.png)<!-- -->
-
-```r
-plot_grid(Genus_root, Genus_soil, align = "h", rel_widths = c(0.9,1.5))
-```
-
-![](AllMines_Graph_files/figure-html/unnamed-chunk-8-3.png)<!-- -->
+![](AllMines_Graph_files/figure-html/r-1.png)<!-- -->
 
 ```r
 #########I am carefully color coding each of the genus that appeared on the previous genus soil and root graph. Agaricales are blue, Boletales are green, and others... But it is very weird that not all genus that appeared on the previous graph appear on this graph.
@@ -239,8 +220,8 @@ plot_grid(Genus_root, Genus_soil, align = "h", rel_widths = c(0.9,1.5))
 # Genus_soil
 ```
 
-#Creating a table modeled after Huang et al. (2012)
-#BGM
+# Creating a table modeled after Huang et al. (2012)
+## BGM
 
 
 ```r
@@ -271,7 +252,7 @@ BGM.genus <- summarise(top10.BGM.grouped, relative_abundance = (sum(Abundance)/s
 View(BGM.genus)
 ```
 
-#HKM
+## HKM
 
 
 ```r
@@ -291,7 +272,8 @@ HKM.genus <- summarise (top10.HKM.grouped, relative_abundance = (sum(Abundance)/
 View (HKM.genus)
 ```
 
-#SH
+## SH
+
 
 ```r
 #Using BGM_mine dataset to extract top 10 OTUs on the mine sites
@@ -310,7 +292,8 @@ SH.genus <- summarise (top10.SH.grouped, relative_abundance = (sum(Abundance)/su
 View (SH.genus)
 ```
 
-#RGM
+## RGM
+
 
 ```r
 #RGM_data dataset is used here to extract top 10 OTUs on the mine sites because all RGM samples came from mine sites
@@ -329,7 +312,7 @@ RGM.genus <- summarise (top10.RGM.grouped, relative_abundance = (sum(Abundance)/
 View (RGM.genus)
 ```
 
-#Put the tables together
+## Put the tables together
 
 ```r
 All.genus <- rbind (BGM.genus, HKM.genus, SH.genus, RGM.genus)
@@ -395,7 +378,7 @@ Tree.BGM <- metacoder::heat_tree(taxa::filter_taxa(obj.BGM, taxon_names == "c__A
 Tree.BGM
 ```
 
-<img src="AllMines_Graph_files/figure-html/unnamed-chunk-15-1.png" style="display: block; margin: auto;" />
+<img src="AllMines_Graph_files/figure-html/unnamed-chunk-14-1.png" style="display: block; margin: auto;" />
 ##HKM
 
 
@@ -443,7 +426,7 @@ Tree.HKM <- metacoder::heat_tree(taxa::filter_taxa(obj.HKM, taxon_names == "c__A
 Tree.HKM
 ```
 
-<img src="AllMines_Graph_files/figure-html/unnamed-chunk-17-1.png" style="display: block; margin: auto;" />
+<img src="AllMines_Graph_files/figure-html/unnamed-chunk-16-1.png" style="display: block; margin: auto;" />
 
 ##SH
 
@@ -491,7 +474,7 @@ Tree.SH <- metacoder::heat_tree(taxa::filter_taxa(obj.HKM, taxon_names == "c__Ag
 Tree.SH
 ```
 
-<img src="AllMines_Graph_files/figure-html/unnamed-chunk-19-1.png" style="display: block; margin: auto;" />
+<img src="AllMines_Graph_files/figure-html/unnamed-chunk-18-1.png" style="display: block; margin: auto;" />
 
 ### Final plot of metacode
 
@@ -504,7 +487,7 @@ plot_grid(Tree.BGM, Tree.HKM, Tree.SH,
           rel_heights = c(2,2))
 ```
 
-<img src="AllMines_Graph_files/figure-html/unnamed-chunk-20-1.png" style="display: block; margin: auto;" />
+<img src="AllMines_Graph_files/figure-html/unnamed-chunk-19-1.png" style="display: block; margin: auto;" />
 
 
 ## Funguild analysis of BGM soil and root samples
@@ -564,7 +547,7 @@ P <- plot_grid(Guild_root, Guild_soil.0, align = "h", rel_heights = c(1,1))
 ggdraw() + draw_plot(P, 0, 0.2, 1, 0.8) + draw_plot(legend, 0, -0.35, 1, 1, 2)
 ```
 
-<img src="AllMines_Graph_files/figure-html/unnamed-chunk-23-1.png" style="display: block; margin: auto;" />
+<img src="AllMines_Graph_files/figure-html/unnamed-chunk-22-1.png" style="display: block; margin: auto;" />
 
 ```r
 ## I am having issue getting making the font of the texts larger
@@ -673,10 +656,10 @@ amp_heatmap(data = BGM_field,
             tax.show = 25,
             tax.aggregate = "Species",
             tax.add = "Family",
-            plot.text.size = 3)
+            plot.text.size = 4)
 ```
 
-![](AllMines_Graph_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
+![](AllMines_Graph_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
 
 ```r
 amp_heatmap(data = HKM_field,
@@ -684,10 +667,10 @@ amp_heatmap(data = HKM_field,
             tax.show = 25,
             tax.aggregate = "Species",
             tax.add = "Family",
-            plot.text.size = 3)
+            plot.text.size = 4)
 ```
 
-![](AllMines_Graph_files/figure-html/unnamed-chunk-26-2.png)<!-- -->
+![](AllMines_Graph_files/figure-html/unnamed-chunk-25-2.png)<!-- -->
 
 ```r
 amp_heatmap(data = SH_field,
@@ -695,10 +678,11 @@ amp_heatmap(data = SH_field,
             tax.show = 25,
             tax.aggregate = "Species",
             tax.add = "Family",
-            plot.text.size = 3)
+            plot.text.size = 4)
 ```
 
-![](AllMines_Graph_files/figure-html/unnamed-chunk-26-3.png)<!-- -->
+![](AllMines_Graph_files/figure-html/unnamed-chunk-25-3.png)<!-- -->
+## Heatmap all fungi in the complete Mine dataset
 
 
 ```r
@@ -707,8 +691,25 @@ amp_heatmap(data = Mines_data,
             tax.show = 25,
             tax.aggregate = "Species",
             tax.add = "Family",
-            plot.text.size = 3)
+            plot.text.size = 4)
+```
+
+![](AllMines_Graph_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
+
+## Heatmap EM fungi in the complete Mine dataset
+
+
+```r
+#Subsetting based on guild, selecting Ecto
+Mines_data.EM <- subset_taxa(Mines_data, grepl("Ecto", guild))
+
+amp_heatmap(data = Mines_data.EM,
+            group = "Site",
+            tax.show = 20,
+            tax.aggregate = "Species",
+            tax.add = "Family",
+            plot.text.size = 3,
+            order.y = "cluster")
 ```
 
 ![](AllMines_Graph_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
-
