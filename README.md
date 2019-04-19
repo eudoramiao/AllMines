@@ -6,7 +6,6 @@ Contents
 The repository contains prelimary analyses for mine sites, all the analyses can be found in [All mines analysis](AllMines_Graph.md)
 
 
-hea
 Session Info
 ========
 ```
