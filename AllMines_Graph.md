@@ -221,6 +221,9 @@ plot_grid(Genus_root, Genus_soil, align = "h", rel_widths = c(0.9,1.3))
 ```
 
 # Creating a table modeled after Huang et al. (2012)
+
+A summary table representing the top OTUs across sample types and mine sites for this study based on the table present by [Huang at al. (2012)](https://link.springer.com/article/10.1007%2Fs00572-012-0436-0)
+
 ## BGM
 
 
@@ -554,7 +557,9 @@ ggdraw() + draw_plot(P, 0, 0.2, 1, 0.8) + draw_plot(legend, 0, -0.35, 1, 1, 2)
 ### The order of your parameters were causing issues
 ```
 
-##PCoA!
+# Community Structure using Bray distances (PCoA)
+
+## PCoA including Forest
 
 
 ```r
@@ -563,6 +568,12 @@ ggdraw() + draw_plot(P, 0, 0.2, 1, 0.8) + draw_plot(legend, 0, -0.35, 1, 1, 2)
 #Creating data frame from phyloseq object -- extracting the top 100 taxa
 top100.Mines <- TopNOTUs(Mines_data, 100)
 Mines.df <- prune_taxa(names(top100.Mines), Mines_data)
+
+
+Mines.NF <- subset_samples(Mines_data, Site != "HKM_F") 
+top100.Mines <- TopNOTUs(Mines_data, 100)
+Mines.df <- prune_taxa(names(top100.Mines), Mines_data)
+
 
 #Ordination analysis
 Mines_ord <- ordinate(Mines.df, "PCoA", "bray")
@@ -597,14 +608,55 @@ Mines_ord_plot2 <- Mines_ord_plot + geom_point(size = 5, alpha = 0.7) +
 Mines_ord_plot2
 ```
 
+![](AllMines_Graph_files/figure-html/unnamed-chunk-23-1.png)<!-- -->
+
+```r
+Mines_ord_plot2 + facet_grid(Treatment ~ Type)
+```
+
+![](AllMines_Graph_files/figure-html/unnamed-chunk-23-2.png)<!-- -->
+
 
 ```r
 #Environmental factor analysis
 Mines_env <- sample_data(Mines.df)
 Mines_env <- Mines_env[,c (1, 3, 4, 5, 7, 8, 12, 13, 16, 17, 19, 20, 21, 22, 24, 25, 29, 31, 33, 35, 36, 38)]
 Mines_env[,1:22] <- sapply(Mines_env[,1:22], as.numeric)
-str (Mines_env)
+str(Mines_env)
+```
 
+```
+## 'data.frame':	177 obs. of  22 variables:
+## Formal class 'sample_data' [package "phyloseq"] with 4 slots
+##   ..@ .Data    :List of 22
+##   .. ..$ : num  0.04 0.04 0.04 0.04 0.05 0.08 0.04 0.08 0.08 0.04 ...
+##   .. ..$ : num  5.07 2.27 5.07 2.27 4.58 ...
+##   .. ..$ : num  18.4 6.28 18.4 6.28 8.85 ...
+##   .. ..$ : num  5.69 5.56 5.69 5.56 6.86 ...
+##   .. ..$ : num  132 186 132 186 128 ...
+##   .. ..$ : num  0.0444 0.02 0.0444 0.02 0.1663 ...
+##   .. ..$ : num  4.01 3.85 4.01 3.85 4.12 4.22 4.01 4.22 4.22 4.01 ...
+##   .. ..$ : num  5.88 9.83 5.88 9.83 6.69 ...
+##   .. ..$ : num  322 526 322 526 382 511 322 511 511 322 ...
+##   .. ..$ : num  34.8 37.1 34.8 37.1 41.9 ...
+##   .. ..$ : num  10.18 3.72 10.18 3.72 13.6 ...
+##   .. ..$ : num  0.86 0.137 0.86 0.137 0.543 1.12 0.86 1.12 1.12 0.86 ...
+##   .. ..$ : num  0.04 0.04 0.04 0.04 0.05 0.04 0.04 0.04 0.04 0.04 ...
+##   .. ..$ : num  0.544 0.21 0.544 0.21 2.951 ...
+##   .. ..$ : num  0.023 0.02 0.023 0.02 0.02 0.05 0.023 0.05 0.05 0.023 ...
+##   .. ..$ : num  1.361 0.362 1.361 0.362 1.354 ...
+##   .. ..$ : num  0.228 0.21 0.228 0.21 0.398 ...
+##   .. ..$ : num  29 28.1 29 28.1 35.2 ...
+##   .. ..$ : num  0.04 0.04 0.04 0.04 0.05 0.04 0.04 0.04 0.04 0.04 ...
+##   .. ..$ : num  0.14 0.13 0.14 0.13 0.15 0.1 0.14 0.1 0.1 0.14 ...
+##   .. ..$ : num  0.04 0.0671 0.04 0.0671 0.05 0.06 0.04 0.06 0.06 0.04 ...
+##   .. ..$ : num  1.05 1.93 1.05 1.93 2.49 ...
+##   ..@ names    : chr  "Ni" "Base_saturation" "Na" "Mg" ...
+##   ..@ row.names: chr  "BGM.PS2.1d.R1" "BGM.PS3.3.R1" "BGM.PS2.3d.R1" "BGM.PS3.2d.R1" ...
+##   ..@ .S3Class : chr "data.frame"
+```
+
+```r
 Mines_envfit <- envfit(Mines_ord$vectors, Mines_env, permutations = 999, na.rm = TRUE)
 
 fit_data <- as.data.frame(scores(Mines_envfit, display = "vectors")) %>%
@@ -612,10 +664,44 @@ fit_data <- as.data.frame(scores(Mines_envfit, display = "vectors")) %>%
   bind_cols(data.frame(Mines_envfit$vectors$r, Mines_envfit$vectors$pvals)) %>%
   #rename(R2 = Oom_env.vectors.r, P.value = Oom_env.vectors.pvals) %>%
   arrange(Mines_envfit.vectors.pvals)
-#########Error in validObject(.Object) : invalid class “sample_data” object: Sample Data must have non-zero dimensions.
+```
 
+```
+## Warning: Deprecated, use tibble::rownames_to_column() instead.
+```
+
+```r
 kable(fit_data, digits = 3, caption = "PCoA!", format = "markdown")
+```
 
+
+
+|Env.var         | Axis.1| Axis.2| Mines_envfit.vectors.r| Mines_envfit.vectors.pvals|
+|:---------------|------:|------:|----------------------:|--------------------------:|
+|Ni              |  0.238|  0.649|                  0.477|                      0.001|
+|Mg              |  0.346|  0.613|                  0.495|                      0.001|
+|Al              |  0.120|  0.744|                  0.568|                      0.001|
+|CEC             |  0.199|  0.853|                  0.767|                      0.001|
+|LBC             |  0.176|  0.834|                  0.726|                      0.001|
+|Fe              |  0.365|  0.546|                  0.431|                      0.001|
+|K               |  0.450|  0.716|                  0.716|                      0.001|
+|C               |  0.294|  0.856|                  0.819|                      0.001|
+|Mo              |  0.432|  0.770|                  0.779|                      0.001|
+|N               |  0.271|  0.842|                  0.782|                      0.001|
+|P               |  0.132|  0.415|                  0.190|                      0.001|
+|Ca              |  0.285|  0.357|                  0.209|                      0.001|
+|As              |  0.339|  0.766|                  0.702|                      0.001|
+|Cr              |  0.258|  0.783|                  0.679|                      0.001|
+|Na              |  0.057|  0.277|                  0.080|                      0.002|
+|Base_saturation |  0.262| -0.078|                  0.075|                      0.003|
+|Mn              |  0.136|  0.228|                  0.070|                      0.004|
+|Equiv_water_pH  |  0.032| -0.243|                  0.060|                      0.006|
+|Cu              | -0.200|  0.046|                  0.042|                      0.027|
+|Cd              |  0.023|  0.188|                  0.036|                      0.037|
+|Pb              |  0.032|  0.101|                  0.011|                      0.348|
+|Zn              | -0.046|  0.085|                  0.009|                      0.407|
+
+```r
 ## Vectors for plot
 fit_reduced <- fit_data[fit_data$Mines_envfit.vectors.pvals < 0.05,] 
 
@@ -623,7 +709,13 @@ fit_plot <- as.data.frame(scores(Mines_envfit, display = "vectors")) %>%
   add_rownames(var = "Env.var") %>%
   inner_join(fit_reduced, by = "Env.var") %>%
   arrange(Mines_envfit.vectors.pvals) 
+```
 
+```
+## Warning: Deprecated, use tibble::rownames_to_column() instead.
+```
+
+```r
 ord_plot.data <- plot_ordination(Mines.df, Mines_ord, 
                             color = "Site", shape = "Mine", justDF = TRUE)
 
@@ -639,10 +731,129 @@ ord.plot.env <- ggplot(data = ord_plot.data, aes(x = Axis.1, y = Axis.2)) +
                                      legend.text = element_text(size = 16),
                                      legend.key.size = unit(0.6, "cm"))
 
-ord.plot.env
+ord.plot.env 
 ```
 
-##Relative Abundance of top 25 OTUs
+![](AllMines_Graph_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
+
+```r
+ord.plot.env + facet_grid(Treatment ~ Type)
+```
+
+![](AllMines_Graph_files/figure-html/unnamed-chunk-24-2.png)<!-- -->
+
+
+## PCoA excluding Forest
+
+
+```r
+###PCoA (adapted from https://github.com/alejorojas2/Corn_Michigan_data/blob/master/R_analysis/Community_analysis.md)
+
+#Creating data frame from phyloseq object -- extracting the top 100 taxa
+#Removing only HKM forest
+#Mines.NF <- subset_samples(Mines_data, Site != "HKM_F") 
+
+#Removing all the forest
+Mines.NF <- subset_samples(Mines_data, Treatment != "Forest") 
+
+top100.Mines.NF <- TopNOTUs(Mines.NF, 100)
+Mines.df.NF <- prune_taxa(names(top100.Mines.NF), Mines.NF)
+
+#Ordination
+Mines_ord.NF <- ordinate(Mines.df.NF, "PCoA", "bray")
+
+#Plotting ordination
+Mines_ord_plot.NF <- plot_ordination(Mines.df.NF, Mines_ord.NF, color = "Site", shape = "Mine")
+
+(Mines_ord_plot2.NF <- Mines_ord_plot.NF + geom_point(size = 5, alpha = 0.7) + 
+  scale_colour_manual(values = colors) + scale_shape_manual(values = shapes) + 
+  labs(title = "PCoA Mines") +
+  theme_gray(base_size = 18) + labs(color = "Site", shape = "Mine") +
+  facet_grid(~ Type) +   
+  theme(legend.text = element_text(size = 17),
+        legend.key.size = unit(0.7, "cm")))
+```
+
+![](AllMines_Graph_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
+
+```r
+#Environmental factor analysis
+Mines_env <- sample_data(Mines.df.NF)
+Mines_env <- Mines_env[,c (1, 3, 4, 5, 7, 8, 12, 13, 16, 17, 19, 20, 21, 22, 24, 25, 29, 31, 33, 35, 36, 38)]
+Mines_env[,1:22] <- sapply(Mines_env[,1:22], as.numeric)
+#str(Mines_env)
+
+Mines_envfit <- envfit(Mines_ord.NF$vectors, Mines_env, permutations = 999, na.rm = TRUE)
+
+fit_data <- as.data.frame(scores(Mines_envfit, display = "vectors")) %>%
+  add_rownames(var = "Env.var") %>%
+  bind_cols(data.frame(Mines_envfit$vectors$r, Mines_envfit$vectors$pvals)) %>%
+  #rename(R2 = Oom_env.vectors.r, P.value = Oom_env.vectors.pvals) %>%
+  arrange(Mines_envfit.vectors.pvals)
+
+
+kable(fit_data, digits = 3, caption = "PCoA!", format = "markdown")
+```
+
+
+
+|Env.var         | Axis.1| Axis.2| Mines_envfit.vectors.r| Mines_envfit.vectors.pvals|
+|:---------------|------:|------:|----------------------:|--------------------------:|
+|Ni              |  0.085| -0.496|                  0.253|                      0.001|
+|Base_saturation |  0.214| -0.489|                  0.285|                      0.001|
+|Na              | -0.385|  0.010|                  0.148|                      0.001|
+|Mg              |  0.183| -0.538|                  0.323|                      0.001|
+|Al              | -0.348| -0.166|                  0.148|                      0.001|
+|Equiv_water_pH  |  0.081| -0.430|                  0.191|                      0.001|
+|CEC             | -0.202| -0.414|                  0.212|                      0.001|
+|LBC             | -0.324| -0.413|                  0.275|                      0.001|
+|Fe              |  0.654| -0.040|                  0.429|                      0.001|
+|K               |  0.378| -0.530|                  0.424|                      0.001|
+|C               |  0.329| -0.405|                  0.272|                      0.001|
+|Mo              |  0.631| -0.328|                  0.506|                      0.001|
+|Mn              |  0.067| -0.528|                  0.284|                      0.001|
+|N               |  0.107| -0.503|                  0.265|                      0.001|
+|P               |  0.016| -0.389|                  0.152|                      0.001|
+|Ca              |  0.158| -0.528|                  0.304|                      0.001|
+|As              |  0.228| -0.396|                  0.209|                      0.001|
+|Cr              |  0.099| -0.554|                  0.317|                      0.001|
+|Cu              | -0.162| -0.283|                  0.106|                      0.001|
+|Pb              | -0.034| -0.263|                  0.070|                      0.005|
+|Zn              | -0.040| -0.261|                  0.070|                      0.005|
+|Cd              | -0.014| -0.255|                  0.065|                      0.007|
+
+```r
+## Vectors for plot
+fit_reduced <- fit_data[fit_data$Mines_envfit.vectors.pvals < 0.05,] 
+
+fit_plot <- as.data.frame(scores(Mines_envfit, display = "vectors")) %>%
+  add_rownames(var = "Env.var") %>%
+  inner_join(fit_reduced, by = "Env.var") %>%
+  arrange(Mines_envfit.vectors.pvals) 
+
+ord_plot.data <- plot_ordination(Mines.df.NF, Mines_ord.NF, 
+                            color = "Site", shape = "Mine", justDF = TRUE)
+
+ord.plot.env <- ggplot(data = ord_plot.data, aes(x = Axis.1, y = Axis.2)) + 
+  geom_point(aes(color=Site, shape=Mine), size = 5, alpha = 0.7) + 
+    scale_colour_manual(values = colors) + scale_shape_manual (values = shapes) +
+  labs(color = "Site", shape = "Mine", x = "PCoA 1 [8.5%]", y = "PCoA 2 [4.6%]") +
+  geom_segment(data = fit_plot, aes(x = 0, xend = Axis.1.x, y = 0, yend = Axis.2.x), 
+               arrow = arrow(length = unit(0.1,"cm")), color = "black", size = 1) + 
+  geom_label_repel(data = fit_plot, aes(x = Axis.1.x, y = Axis.2.x, label = Env.var), 
+            size = 4, force = 1) +
+  facet_grid(~ Type) +
+  theme_gray(base_size = 18) + theme(legend.title = element_text(size = 18),
+                                     legend.text = element_text(size = 16),
+                                     legend.key.size = unit(0.6, "cm"))
+
+ord.plot.env 
+```
+
+![](AllMines_Graph_files/figure-html/unnamed-chunk-25-2.png)<!-- -->
+
+# Heatmap - Relative Abundance of top 25 OTUs
+
 
 ```r
 library(ampvis)
@@ -656,10 +867,10 @@ amp_heatmap(data = BGM_field,
             tax.show = 25,
             tax.aggregate = "Species",
             tax.add = "Family",
-            plot.text.size = 4)
+            plot.text.size = 3)
 ```
 
-![](AllMines_Graph_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
+![](AllMines_Graph_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
 
 ```r
 amp_heatmap(data = HKM_field,
@@ -667,10 +878,10 @@ amp_heatmap(data = HKM_field,
             tax.show = 25,
             tax.aggregate = "Species",
             tax.add = "Family",
-            plot.text.size = 4)
+            plot.text.size = 3)
 ```
 
-![](AllMines_Graph_files/figure-html/unnamed-chunk-25-2.png)<!-- -->
+![](AllMines_Graph_files/figure-html/unnamed-chunk-26-2.png)<!-- -->
 
 ```r
 amp_heatmap(data = SH_field,
@@ -678,10 +889,10 @@ amp_heatmap(data = SH_field,
             tax.show = 25,
             tax.aggregate = "Species",
             tax.add = "Family",
-            plot.text.size = 4)
+            plot.text.size = 3)
 ```
 
-![](AllMines_Graph_files/figure-html/unnamed-chunk-25-3.png)<!-- -->
+![](AllMines_Graph_files/figure-html/unnamed-chunk-26-3.png)<!-- -->
 ## Heatmap all fungi in the complete Mine dataset
 
 
@@ -691,10 +902,10 @@ amp_heatmap(data = Mines_data,
             tax.show = 25,
             tax.aggregate = "Species",
             tax.add = "Family",
-            plot.text.size = 4)
+            plot.text.size = 3)
 ```
 
-![](AllMines_Graph_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
+![](AllMines_Graph_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
 
 ## Heatmap EM fungi in the complete Mine dataset
 
@@ -712,4 +923,4 @@ amp_heatmap(data = Mines_data.EM,
             order.y = "cluster")
 ```
 
-![](AllMines_Graph_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
+![](AllMines_Graph_files/figure-html/unnamed-chunk-28-1.png)<!-- -->
