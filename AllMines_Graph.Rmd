@@ -192,103 +192,184 @@ A summary table representing the top OTUs across sample types and mine sites for
 
 ## BGM
 
-```{r, eval=FALSE}
+```{r}
 #Using BGM_mine dataset to extract top 10 OTUs on the mine sites
 top10.BGM <- TopNOTUs(BGM_mine, 25) 
-#Extracting the top 10 OTUs is only 3 species
 
-# Transform to relative abundance
-#BGM.rel <- transform_sample_counts(BGM_field, function(x) 100 * x/sum(x))
-#Then use BGM_field dataset to pull these taxa from both mine sites and forest site
-#top10.BGM.df <- prune_taxa(top10.BGM, BGM.rel) %>% psmelt()
-
+#Create a data frame to modify
 top10.BGM.df <- psmelt(BGM_field)
   
 #Create data frame
-top10.BGM.df %>%
-  group_by(Group, Type, Genus) %>% 
-  summarise(n = n(),
-            Abd = sum(Abundance))
- top10.BGM.df %>%
-   group_by(Group) %>%
-   summarise(total = sum(Abundance))
+test.df.BGM <-top10.BGM.df %>%
+  group_by(Group, Type, Family, Genus, OTU) %>% 
+  summarise(Abd = sum(Abundance)) %>%
+  unite(Group, Type, col="Sample", sep = "_") %>%
+  unite(Family, Genus, col = "Taxa", sep = ";") %>%
+  spread(Sample, Abd)
 
-top10.BGM.wsum <- merge(top10.BGM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
-top10.BGM.wsum$otu_rel_abd <- (top10.BGM.wsum$Abundance)/(top10.BGM.wsum$sum)*100
-top10.BGM.grouped <- group_by(top10.BGM.wsum, Genus, Type, Site)
-BGM.genus <- summarise(top10.BGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
-View(BGM.genus)
+#Percent
+perc <- function (x) 100 * x/sum(x)
+rnd <- function (x) round(x, 2)
+
+#Table by sample
+tbf.25.BGM <- test.df.BGM %>% 
+  mutate_if(is.numeric, perc) %>%
+  filter(OTU %in% top10.BGM) %>%
+  mutate_if(is.numeric, rnd) %>%
+  mutate(sumRow = rowSums(.[3:12])) %>%
+  arrange(desc(sumRow))
+
+kable(tbf.25.BGM[1:12], digits = 2, caption = "BGM", format = "markdown") 
+
+# top10.BGM.wsum <- merge(top10.BGM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+# top10.BGM.wsum$otu_rel_abd <- (top10.BGM.wsum$Abundance)/(top10.BGM.wsum$sum)*100
+# top10.BGM.grouped <- group_by(top10.BGM.wsum, Genus, Type, Site)
+# BGM.genus <- summarise(top10.BGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
+# View(BGM.genus)
 
 ```
 
 ## HKM
 
-```{r, eval=FALSE}
-#Using HKM_mine dataset to extract top 10 OTUs on the mine sites
-top10.HKM <- TopNOTUs(HKM_mine, 10)
-#Then use HKM_field dataset to pull these taxa from both mine sites and forest site
-top10.HKM.df <- prune_taxa(top10.HKM, HKM_field) %>% psmelt()
+```{r}
+# #Using HKM_mine dataset to extract top 10 OTUs on the mine sites
+# top10.HKM <- TopNOTUs(HKM_mine, 10)
+# #Then use HKM_field dataset to pull these taxa from both mine sites and forest site
+# top10.HKM.df <- prune_taxa(top10.HKM, HKM_field) %>% psmelt()
+# top10.HKM.wsum <- merge(top10.HKM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+# top10.HKM.wsum$otu_rel_abd <- (top10.HKM.wsum$Abundance)/(top10.HKM.wsum$sum)*100
+# top10.HKM.grouped <- group_by(top10.HKM.wsum, Genus, Type, Site)
+# HKM.genus <- summarise (top10.HKM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
+# View (HKM.genus)
 
-top10.HKM.wsum <- merge(top10.HKM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+top10.HKM <- TopNOTUs(HKM_mine, 25) 
 
-top10.HKM.wsum$otu_rel_abd <- (top10.HKM.wsum$Abundance)/(top10.HKM.wsum$sum)*100
+#Create a data frame to modify
+top10.HKM.df <- psmelt(HKM_field)
+  
+#Create data frame
+test.df.HKM <-top10.HKM.df %>%
+  group_by(Group, Type, Family, Genus, OTU) %>% 
+  summarise(Abd = sum(Abundance)) %>%
+  unite(Group, Type, col="Sample", sep = "_") %>%
+  unite(Family, Genus, col = "Taxa", sep = ";") %>%
+  spread(Sample, Abd)
 
-top10.HKM.grouped <- group_by(top10.HKM.wsum, Genus, Type, Site)
+#Percent
+perc <- function (x) 100 * x/sum(x)
+rnd <- function (x) round(x, 2)
 
-HKM.genus <- summarise (top10.HKM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
+#Table by sample
+tbf.25.HKM <- test.df.HKM %>% 
+  mutate_if(is.numeric, perc) %>%
+  filter(OTU %in% top10.HKM) %>%
+  mutate_if(is.numeric, rnd) %>%
+  mutate(sumRow = rowSums(.[3:12])) %>%
+  arrange(desc(sumRow))
 
-View (HKM.genus)
+kable(tbf.25.HKM[1:12], digits = 2, caption = "HKM", format = "markdown")
 ```
 
 ## SH
 
-```{r, eval=FALSE}
-#Using BGM_mine dataset to extract top 10 OTUs on the mine sites
-top10.SH <- TopNOTUs(SH_mine, 10)
-#Then use BGM_field dataset to pull these taxa from both mine sites and forest site
-top10.SH.df <- prune_taxa(top10.SH, SH_field) %>% psmelt()
+```{r}
+# #Using BGM_mine dataset to extract top 10 OTUs on the mine sites
+# top10.SH <- TopNOTUs(SH_mine, 10)
+# #Then use BGM_field dataset to pull these taxa from both mine sites and forest site
+# top10.SH.df <- prune_taxa(top10.SH, SH_field) %>% psmelt()
+# top10.SH.wsum <- merge(top10.SH.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+# top10.SH.wsum$otu_rel_abd <- (top10.SH.wsum$Abundance)/(top10.SH.wsum$sum)*100
+# top10.SH.grouped <- group_by(top10.SH.wsum, Genus, Type, Site)
+# SH.genus <- summarise (top10.SH.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
+# View (SH.genus)
 
-top10.SH.wsum <- merge(top10.SH.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+top10.SH <- TopNOTUs(SH_mine, 25) 
 
-top10.SH.wsum$otu_rel_abd <- (top10.SH.wsum$Abundance)/(top10.SH.wsum$sum)*100
+#Create a data frame to modify
+top10.SH.df <- psmelt(SH_field)
+  
+#Create data frame
+test.df.SH <-top10.SH.df %>%
+  group_by(Group, Type, Family, Genus, OTU) %>% 
+  summarise(Abd = sum(Abundance)) %>%
+  unite(Group, Type, col="Sample", sep = "_") %>%
+  unite(Family, Genus, col = "Taxa", sep = ";") %>%
+  spread(Sample, Abd)
 
-top10.SH.grouped <- group_by(top10.SH.wsum, Genus, Type, Site)
+#Percent
+perc <- function (x) 100 * x/sum(x)
+rnd <- function (x) round(x, 2)
 
-SH.genus <- summarise (top10.SH.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
+#Table by sample
+tbf.25.SH <- test.df.SH %>% 
+  mutate_if(is.numeric, perc) %>%
+  filter(OTU %in% top10.SH) %>%
+  mutate_if(is.numeric, rnd) %>%
+  mutate(sumRow = rowSums(.[3:5])) %>%
+  arrange(desc(sumRow))
 
-View (SH.genus)
+kable(tbf.25.SH[1:5], digits = 2, caption = "SH", format = "markdown")
 ```
 
 ## RGM
 
-```{r, eval=FALSE}
+```{r}
 #RGM_data dataset is used here to extract top 10 OTUs on the mine sites because all RGM samples came from mine sites
-top10.RGM <- TopNOTUs(RGM_data, 10)
-#Then use BGM_field dataset to pull these taxa from both mine sites and forest site
-top10.RGM.df <- prune_taxa(top10.RGM, RGM_data) %>% psmelt()
+# top10.RGM <- TopNOTUs(RGM_data, 10)
+# #Then use BGM_field dataset to pull these taxa from both mine sites and forest site
+# top10.RGM.df <- prune_taxa(top10.RGM, RGM_data) %>% psmelt()
+# top10.RGM.wsum <- merge(top10.RGM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+# top10.RGM.wsum$otu_rel_abd <- (top10.RGM.wsum$Abundance)/(top10.RGM.wsum$sum)*100
+# top10.RGM.grouped <- group_by(top10.RGM.wsum, Genus, Type, Site)
+# RGM.genus <- summarise (top10.RGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
+# View (RGM.genus)
 
-top10.RGM.wsum <- merge(top10.RGM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+top10.RGM <- TopNOTUs(RGM_data, 25) 
 
-top10.RGM.wsum$otu_rel_abd <- (top10.RGM.wsum$Abundance)/(top10.RGM.wsum$sum)*100
+#Create a data frame to modify
+top10.RGM.df <- psmelt(RGM_data)
+  
+#Create data frame
+test.df.RGM <-top10.RGM.df %>%
+  group_by(Group, Type, Family, Genus, OTU) %>% 
+  summarise(Abd = sum(Abundance)) %>%
+  unite(Group, Type, col="Sample", sep = "_") %>%
+  unite(Family, Genus, col = "Taxa", sep = ";") %>%
+  spread(Sample, Abd)
 
-top10.RGM.grouped <- group_by(top10.RGM.wsum, Genus, Type, Site)
+#Percent
+perc <- function (x) 100 * x/sum(x)
+rnd <- function (x) round(x, 2)
 
-RGM.genus <- summarise (top10.RGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
+#Table by sample
+tbf.25.RGM <- test.df.RGM %>% 
+  mutate_if(is.numeric, perc) %>%
+  filter(OTU %in% top10.RGM) %>%
+  mutate_if(is.numeric, rnd) %>%
+  mutate(sumRow = rowSums(.[3:6])) %>%
+  arrange(desc(sumRow))
 
-View (RGM.genus)
+kable(tbf.25.RGM[1:6], digits = 2, caption = "RGM", format = "markdown")
 ```
 
 ## Put the tables together
-```{r, eval=FALSE}
-All.genus <- rbind (BGM.genus, HKM.genus, SH.genus, RGM.genus)
-View (All.genus)
+```{r}
+# All.genus <- rbind (BGM.genus, HKM.genus, SH.genus, RGM.genus)
+# View (All.genus)
+# unique_genus <- unique (All.genus$Genus)
+# All.genus.table <- data.frame ("Genus" = unique_genus)
+# All.genus.soil <- filter(All.genus, Type == "Soil")
+# All.genus.root <- filter(All.genus, Type == "Root")
+# list_site <- unique (All.genus$Site)
+# All.genus$BGM_1_soil <- NA
 
-unique_genus <- unique (All.genus$Genus)
-All.genus.table <- data.frame ("Genus" = unique_genus)
-All.genus.soil <- filter(All.genus, Type == "Soil")
-All.genus.root <- filter(All.genus, Type == "Root")
-list_site <- unique (All.genus$Site)
-All.genus$BGM_1_soil <- NA
+final_tbf <- full_join(tbf.25.BGM[1:12],tbf.25.HKM[1:12], by=c("Taxa","OTU")) %>%
+  full_join(tbf.25.SH[1:5], by=c("Taxa","OTU")) %>%
+  full_join(tbf.25.RGM[1:6], by=c("Taxa","OTU"))
+
+final_tbf[is.na(final_tbf)] <- ""
+
+kable(final_tbf, digits = 2, caption = "Final Table top 25 OTUs", format = "markdown")
 ```
 
 

@@ -230,104 +230,446 @@ A summary table representing the top OTUs across sample types and mine sites for
 ```r
 #Using BGM_mine dataset to extract top 10 OTUs on the mine sites
 top10.BGM <- TopNOTUs(BGM_mine, 25) 
-#Extracting the top 10 OTUs is only 3 species
 
-# Transform to relative abundance
-#BGM.rel <- transform_sample_counts(BGM_field, function(x) 100 * x/sum(x))
-#Then use BGM_field dataset to pull these taxa from both mine sites and forest site
-#top10.BGM.df <- prune_taxa(top10.BGM, BGM.rel) %>% psmelt()
-
+#Create a data frame to modify
 top10.BGM.df <- psmelt(BGM_field)
-  
-#Create data frame
-top10.BGM.df %>%
-  group_by(Group, Type, Genus) %>% 
-  summarise(n = n(),
-            Abd = sum(Abundance))
- top10.BGM.df %>%
-   group_by(Group) %>%
-   summarise(total = sum(Abundance))
+```
 
-top10.BGM.wsum <- merge(top10.BGM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
-top10.BGM.wsum$otu_rel_abd <- (top10.BGM.wsum$Abundance)/(top10.BGM.wsum$sum)*100
-top10.BGM.grouped <- group_by(top10.BGM.wsum, Genus, Type, Site)
-BGM.genus <- summarise(top10.BGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
-View(BGM.genus)
+```
+## Warning in psmelt(BGM_field): The sample variables: 
+## Sample
+##  have been renamed to: 
+## sample_Sample
+## to avoid conflicts with special phyloseq plot attribute names.
+```
+
+```r
+#Create data frame
+test.df.BGM <-top10.BGM.df %>%
+  group_by(Group, Type, Family, Genus, OTU) %>% 
+  summarise(Abd = sum(Abundance)) %>%
+  unite(Group, Type, col="Sample", sep = "_") %>%
+  unite(Family, Genus, col = "Taxa", sep = ";") %>%
+  spread(Sample, Abd)
+
+#Percent
+perc <- function (x) 100 * x/sum(x)
+rnd <- function (x) round(x, 2)
+
+#Table by sample
+tbf.25.BGM <- test.df.BGM %>% 
+  mutate_if(is.numeric, perc) %>%
+  filter(OTU %in% top10.BGM) %>%
+  mutate_if(is.numeric, rnd) %>%
+  mutate(sumRow = rowSums(.[3:12])) %>%
+  arrange(desc(sumRow))
+
+kable(tbf.25.BGM[1:12], digits = 2, caption = "BGM", format = "markdown") 
+```
+
+
+
+|Taxa                                  |OTU      | BGM_1_Root| BGM_1_Soil| BGM_2_Root| BGM_2_Soil| BGM_3_Root| BGM_3_Soil| BGM_4_Root| BGM_4_Soil| BGM_F_Root| BGM_F_Soil|
+|:-------------------------------------|:--------|----------:|----------:|----------:|----------:|----------:|----------:|----------:|----------:|----------:|----------:|
+|f__Pisolithaceae;g__Pisolithus        |OTU_137  |       0.00|       0.01|       0.03|       0.16|      31.05|       5.37|      12.88|       0.33|       0.00|       0.00|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1417 |       0.05|       0.10|       0.02|       0.01|      44.18|       1.09|       0.14|       0.04|       0.00|       0.10|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1361 |       0.01|       0.01|       0.00|       0.02|       0.00|       0.06|      27.38|       0.01|       0.00|       0.01|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1416 |       5.05|       2.74|       2.69|       1.88|       3.68|       2.66|       3.09|       2.16|       0.28|       0.41|
+|f__unidentified;g__unidentified       |OTU_39   |      13.39|       4.13|       0.00|       0.00|       0.00|       0.00|       0.00|       0.00|       0.00|       0.00|
+|f__Rhizopogonaceae;g__Rhizopogon      |OTU_261  |       8.74|       2.50|       0.00|       0.89|       0.71|       0.01|       3.42|       0.98|       0.00|       0.00|
+|f__unidentified;g__unidentified       |OTU_1404 |      16.25|       0.06|       0.16|       0.01|       0.06|       0.20|       0.02|       0.02|       0.02|       0.07|
+|f__Boletaceae;g__Boletus              |OTU_128  |       0.00|       0.00|       0.00|       0.03|       0.00|       0.05|      13.18|       2.29|       0.00|       0.00|
+|f__unidentified;g__unidentified       |OTU_1428 |       0.72|       0.01|       0.05|       0.05|       0.02|      13.82|       0.06|       0.04|       0.05|       0.01|
+|f__unidentified;g__unidentified       |OTU_1442 |       0.02|       0.07|       0.49|       0.05|       0.01|       0.01|       0.14|      13.79|       0.07|       0.11|
+|f__unidentified;g__unidentified       |OTU_59   |       1.47|       0.28|       5.36|       2.61|       0.03|       0.00|       1.71|       3.05|       0.00|       0.00|
+|f__Thelephoraceae;g__unidentified     |OTU_185  |       3.90|       3.58|       4.83|       2.17|       0.00|       0.00|       0.00|       0.01|       0.00|       0.00|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1450 |       0.01|       0.17|       0.01|       0.01|       0.01|       1.21|       2.02|       9.85|       0.02|       0.01|
+|f__unidentified;g__unidentified       |OTU_1406 |       1.36|       0.01|       0.00|       0.01|       0.00|      11.39|       0.28|       0.01|       0.00|       0.04|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1435 |       0.05|       0.58|       0.01|       0.20|       0.00|       0.05|       0.15|      10.20|       0.00|       0.01|
+|f__unidentified;g__unidentified       |OTU_1448 |       0.03|      10.50|       0.01|       0.02|       0.05|       0.01|       0.46|       0.03|       0.08|       0.04|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1371 |       0.04|       0.01|       0.01|       0.01|       0.00|      10.89|       0.09|       0.01|       0.00|       0.01|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1427 |       0.10|       0.08|       0.02|       0.02|       0.04|      10.10|       0.03|       0.05|       0.12|       0.05|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1213 |       0.76|       1.00|       0.55|       6.58|       0.34|       0.55|       0.25|       0.32|       0.04|       0.11|
+|f__unidentified;g__unidentified       |OTU_1429 |       0.01|       0.04|       0.10|       0.02|       0.00|       0.04|       0.00|      10.05|       0.03|       0.01|
+|f__unidentified;g__unidentified       |OTU_1459 |       0.00|       9.12|       0.01|       0.04|       0.00|       0.02|       0.00|       0.00|       0.00|       0.02|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1426 |       0.23|       0.04|       0.03|       7.83|       0.01|       0.12|       0.05|       0.13|       0.00|       0.37|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1382 |       0.26|       0.03|       0.01|       0.03|       0.11|       0.04|       0.77|       6.79|       0.59|       0.03|
+|f__unidentified;g__unidentified       |OTU_1390 |       0.03|       0.02|       0.09|       7.20|       0.09|       0.13|       0.05|       0.03|       0.12|       0.08|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1405 |       0.01|       0.12|       0.05|       6.37|       0.01|       0.11|       0.03|       0.05|       0.00|       0.04|
+
+```r
+# top10.BGM.wsum <- merge(top10.BGM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+# top10.BGM.wsum$otu_rel_abd <- (top10.BGM.wsum$Abundance)/(top10.BGM.wsum$sum)*100
+# top10.BGM.grouped <- group_by(top10.BGM.wsum, Genus, Type, Site)
+# BGM.genus <- summarise(top10.BGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
+# View(BGM.genus)
 ```
 
 ## HKM
 
 
 ```r
-#Using HKM_mine dataset to extract top 10 OTUs on the mine sites
-top10.HKM <- TopNOTUs(HKM_mine, 10)
-#Then use HKM_field dataset to pull these taxa from both mine sites and forest site
-top10.HKM.df <- prune_taxa(top10.HKM, HKM_field) %>% psmelt()
+# #Using HKM_mine dataset to extract top 10 OTUs on the mine sites
+# top10.HKM <- TopNOTUs(HKM_mine, 10)
+# #Then use HKM_field dataset to pull these taxa from both mine sites and forest site
+# top10.HKM.df <- prune_taxa(top10.HKM, HKM_field) %>% psmelt()
+# top10.HKM.wsum <- merge(top10.HKM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+# top10.HKM.wsum$otu_rel_abd <- (top10.HKM.wsum$Abundance)/(top10.HKM.wsum$sum)*100
+# top10.HKM.grouped <- group_by(top10.HKM.wsum, Genus, Type, Site)
+# HKM.genus <- summarise (top10.HKM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
+# View (HKM.genus)
 
-top10.HKM.wsum <- merge(top10.HKM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+top10.HKM <- TopNOTUs(HKM_mine, 25) 
 
-top10.HKM.wsum$otu_rel_abd <- (top10.HKM.wsum$Abundance)/(top10.HKM.wsum$sum)*100
-
-top10.HKM.grouped <- group_by(top10.HKM.wsum, Genus, Type, Site)
-
-HKM.genus <- summarise (top10.HKM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
-
-View (HKM.genus)
+#Create a data frame to modify
+top10.HKM.df <- psmelt(HKM_field)
 ```
+
+```
+## Warning in psmelt(HKM_field): The sample variables: 
+## Sample
+##  have been renamed to: 
+## sample_Sample
+## to avoid conflicts with special phyloseq plot attribute names.
+```
+
+```r
+#Create data frame
+test.df.HKM <-top10.HKM.df %>%
+  group_by(Group, Type, Family, Genus, OTU) %>% 
+  summarise(Abd = sum(Abundance)) %>%
+  unite(Group, Type, col="Sample", sep = "_") %>%
+  unite(Family, Genus, col = "Taxa", sep = ";") %>%
+  spread(Sample, Abd)
+
+#Percent
+perc <- function (x) 100 * x/sum(x)
+rnd <- function (x) round(x, 2)
+
+#Table by sample
+tbf.25.HKM <- test.df.HKM %>% 
+  mutate_if(is.numeric, perc) %>%
+  filter(OTU %in% top10.HKM) %>%
+  mutate_if(is.numeric, rnd) %>%
+  mutate(sumRow = rowSums(.[3:12])) %>%
+  arrange(desc(sumRow))
+
+kable(tbf.25.HKM[1:12], digits = 2, caption = "HKM", format = "markdown")
+```
+
+
+
+|Taxa                                           |OTU      | HKM_1_Root| HKM_1_Soil| HKM_2_Root| HKM_2_Soil| HKM_3_Root| HKM_3_Soil| HKM_4_Root| HKM_4_Soil| HKM_F_Root| HKM_F_Soil|
+|:----------------------------------------------|:--------|----------:|----------:|----------:|----------:|----------:|----------:|----------:|----------:|----------:|----------:|
+|f__Amanitaceae;g__Amanita                      |OTU_35   |       1.30|      15.04|       0.00|       0.07|      20.66|      17.72|       0.39|       5.62|       0.01|       0.00|
+|f__Helotiaceae;g__Meliniomyces                 |OTU_28   |      18.91|       4.42|       5.40|       1.58|       9.13|       3.16|       5.51|       2.08|       5.89|       1.40|
+|f__Hyaloscyphaceae;g__unidentified             |OTU_76   |      16.82|       2.20|       1.24|       0.24|       1.89|       1.31|      10.27|       0.20|       5.52|       2.45|
+|f__Gloniaceae;g__Cenococcum                    |OTU_26   |       0.21|       0.83|       0.03|       0.57|      31.41|       2.93|       1.08|       1.36|       0.32|       0.13|
+|f__unidentified;g__unidentified                |OTU_58   |      24.56|       1.30|       0.00|       0.00|       0.00|       0.00|       4.20|       0.00|       0.00|       0.00|
+|f__unidentified;g__unidentified                |OTU_63   |       9.58|      10.21|       0.00|       0.01|       0.00|       0.00|       4.65|       0.04|       0.00|       0.00|
+|f__Hyaloscyphaceae;g__unidentified             |OTU_64   |       0.41|       0.05|       9.55|       2.13|       6.18|       2.06|       3.11|       0.71|       0.00|       0.16|
+|f__unidentified;g__unidentified                |OTU_34   |       0.10|       0.47|       7.40|       3.28|       1.44|       2.78|       3.54|       1.18|       1.72|       0.90|
+|f__Myxotrichaceae;g__Oidiodendron              |OTU_89   |       0.18|       0.47|       4.40|       1.33|       2.00|       1.71|       8.99|       1.65|       0.29|       0.20|
+|f__Cortinariaceae;g__Cortinarius               |OTU_24   |       0.00|       0.00|       0.01|       2.56|       0.02|      16.59|       0.00|       0.01|       0.00|       0.00|
+|f__Mortierellaceae;g__Mortierella              |OTU_60   |       0.14|       4.70|       0.03|       6.18|       0.01|       0.02|       0.00|       0.00|       0.08|       1.52|
+|f__unidentified;g__unidentified                |OTU_46   |       0.00|       0.00|       6.85|       3.87|       0.01|       0.00|       0.00|       0.00|       0.00|       0.00|
+|f__Myxotrichaceae;g__Oidiodendron              |OTU_91   |       0.03|       0.44|       0.53|       2.32|       0.43|       1.82|       2.22|       1.37|       0.02|       0.21|
+|f__Clavulinaceae;g__Clavulina                  |OTU_65   |       0.00|       0.00|       0.65|       8.05|       0.01|       0.00|       0.00|       0.00|       0.00|       0.00|
+|f__Mortierellaceae;g__Mortierella              |OTU_61   |       0.00|       1.06|       0.05|       6.65|       0.01|       0.00|       0.40|       0.13|       0.00|       0.00|
+|f__Russulaceae;g__Russula                      |OTU_106  |       0.00|       0.00|       3.42|       4.24|       0.00|       0.48|       0.00|       0.05|       0.00|       0.00|
+|f__Umbelopsidaceae;g__Umbelopsis               |OTU_29   |       0.00|       0.00|       0.17|       5.80|       0.00|       0.30|       0.09|       0.34|       0.01|       1.21|
+|f__Mortierellaceae;g__Mortierella              |OTU_27   |       0.16|       3.46|       0.06|       1.27|       0.01|       2.42|       0.09|       0.01|       0.05|       0.25|
+|f__unidentified;g__unidentified                |OTU_1463 |       0.04|       6.70|       0.01|       0.02|       0.20|       0.01|       0.06|       0.01|       0.55|       0.01|
+|f__unidentified;g__unidentified                |OTU_1443 |       0.24|       0.02|       0.03|       0.00|       0.66|       5.36|       0.00|       0.01|       0.61|       0.00|
+|f__Archaeorhizomycetaceae;g__Archaeorhizomyces |OTU_36   |       0.00|       1.67|       0.01|       3.70|       0.01|       0.36|       0.00|       0.95|       0.00|       0.00|
+|f__unidentified;g__unidentified                |OTU_1444 |       0.00|       0.00|       0.00|       0.00|       0.00|       0.01|       0.03|       6.30|       0.20|       0.00|
+|f__Leptosphaeriaceae;g__Leptosphaeria          |OTU_1358 |       0.19|       0.02|       0.85|       0.05|       0.04|       0.05|       0.00|       4.79|       0.10|       0.02|
+|f__unidentified;g__unidentified                |OTU_1511 |       0.01|       0.00|       0.00|       0.00|       0.04|       0.00|       0.00|       4.99|       0.00|       0.01|
+|f__unidentified;g__unidentified                |OTU_39   |       0.00|       0.00|       0.01|       4.61|       0.00|       0.00|       0.00|       0.01|       0.00|       0.00|
 
 ## SH
 
 
 ```r
-#Using BGM_mine dataset to extract top 10 OTUs on the mine sites
-top10.SH <- TopNOTUs(SH_mine, 10)
-#Then use BGM_field dataset to pull these taxa from both mine sites and forest site
-top10.SH.df <- prune_taxa(top10.SH, SH_field) %>% psmelt()
+# #Using BGM_mine dataset to extract top 10 OTUs on the mine sites
+# top10.SH <- TopNOTUs(SH_mine, 10)
+# #Then use BGM_field dataset to pull these taxa from both mine sites and forest site
+# top10.SH.df <- prune_taxa(top10.SH, SH_field) %>% psmelt()
+# top10.SH.wsum <- merge(top10.SH.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+# top10.SH.wsum$otu_rel_abd <- (top10.SH.wsum$Abundance)/(top10.SH.wsum$sum)*100
+# top10.SH.grouped <- group_by(top10.SH.wsum, Genus, Type, Site)
+# SH.genus <- summarise (top10.SH.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
+# View (SH.genus)
 
-top10.SH.wsum <- merge(top10.SH.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+top10.SH <- TopNOTUs(SH_mine, 25) 
 
-top10.SH.wsum$otu_rel_abd <- (top10.SH.wsum$Abundance)/(top10.SH.wsum$sum)*100
-
-top10.SH.grouped <- group_by(top10.SH.wsum, Genus, Type, Site)
-
-SH.genus <- summarise (top10.SH.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
-
-View (SH.genus)
+#Create a data frame to modify
+top10.SH.df <- psmelt(SH_field)
 ```
+
+```
+## Warning in psmelt(SH_field): The sample variables: 
+## Sample
+##  have been renamed to: 
+## sample_Sample
+## to avoid conflicts with special phyloseq plot attribute names.
+```
+
+```r
+#Create data frame
+test.df.SH <-top10.SH.df %>%
+  group_by(Group, Type, Family, Genus, OTU) %>% 
+  summarise(Abd = sum(Abundance)) %>%
+  unite(Group, Type, col="Sample", sep = "_") %>%
+  unite(Family, Genus, col = "Taxa", sep = ";") %>%
+  spread(Sample, Abd)
+
+#Percent
+perc <- function (x) 100 * x/sum(x)
+rnd <- function (x) round(x, 2)
+
+#Table by sample
+tbf.25.SH <- test.df.SH %>% 
+  mutate_if(is.numeric, perc) %>%
+  filter(OTU %in% top10.SH) %>%
+  mutate_if(is.numeric, rnd) %>%
+  mutate(sumRow = rowSums(.[3:5])) %>%
+  arrange(desc(sumRow))
+
+kable(tbf.25.SH[1:5], digits = 2, caption = "SH", format = "markdown")
+```
+
+
+
+|Taxa                                  |OTU      | SH_F_Soil| SH_M_Soil| SH_P_Soil|
+|:-------------------------------------|:--------|---------:|---------:|---------:|
+|f__Sclerodermataceae;g__Scleroderma   |OTU_108  |         0|      0.00|     47.19|
+|f__unidentified;g__unidentified       |OTU_21   |         0|      8.79|      0.40|
+|f__unidentified;g__unidentified       |OTU_38   |         0|      7.42|      0.36|
+|f__unidentified;g__unidentified       |OTU_33   |         0|      0.00|      7.27|
+|f__Teratosphaeriaceae;g__Devriesia    |OTU_52   |         0|      6.77|      0.20|
+|f__unidentified;g__unidentified       |OTU_25   |         0|      5.65|      0.00|
+|f__unidentified;g__unidentified       |OTU_75   |         0|      5.34|      0.09|
+|f__unidentified;g__unidentified       |OTU_23   |         0|      5.37|      0.00|
+|f__unidentified;g__unidentified       |OTU_30   |         0|      3.88|      0.00|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1488 |         0|      2.71|      0.00|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1487 |         0|      2.40|      0.00|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1525 |         0|      2.40|      0.00|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1495 |         0|      2.15|      0.00|
+|f__unidentified;g__unidentified       |OTU_59   |         0|      2.14|      0.00|
+|f__Didymellaceae;g__Phoma             |OTU_182  |         0|      2.12|      0.01|
+|f__Aspergillaceae;g__Aspergillus      |OTU_435  |         0|      2.11|      0.00|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1483 |         0|      2.10|      0.00|
+|f__Parmeliaceae;g__Protoparmelia      |OTU_776  |         0|      2.05|      0.01|
+|f__unidentified;g__unidentified       |OTU_528  |         0|      1.99|      0.00|
+|f__unidentified;g__unidentified       |OTU_372  |         0|      1.84|      0.01|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1285 |         0|      1.81|      0.00|
+|f__unidentified;g__unidentified       |OTU_116  |         0|      1.73|      0.03|
+|f__Leptosphaeriaceae;g__Leptosphaeria |OTU_1269 |         0|      1.75|      0.00|
+|f__unidentified;g__unidentified       |OTU_422  |         0|      1.70|      0.01|
+|f__unidentified;g__unidentified       |OTU_1397 |         0|      1.55|      0.00|
 
 ## RGM
 
 
 ```r
 #RGM_data dataset is used here to extract top 10 OTUs on the mine sites because all RGM samples came from mine sites
-top10.RGM <- TopNOTUs(RGM_data, 10)
-#Then use BGM_field dataset to pull these taxa from both mine sites and forest site
-top10.RGM.df <- prune_taxa(top10.RGM, RGM_data) %>% psmelt()
+# top10.RGM <- TopNOTUs(RGM_data, 10)
+# #Then use BGM_field dataset to pull these taxa from both mine sites and forest site
+# top10.RGM.df <- prune_taxa(top10.RGM, RGM_data) %>% psmelt()
+# top10.RGM.wsum <- merge(top10.RGM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+# top10.RGM.wsum$otu_rel_abd <- (top10.RGM.wsum$Abundance)/(top10.RGM.wsum$sum)*100
+# top10.RGM.grouped <- group_by(top10.RGM.wsum, Genus, Type, Site)
+# RGM.genus <- summarise (top10.RGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
+# View (RGM.genus)
 
-top10.RGM.wsum <- merge(top10.RGM.df, sample_sum.std, by.x = "Sample", by.y = "Sample")
+top10.RGM <- TopNOTUs(RGM_data, 25) 
 
-top10.RGM.wsum$otu_rel_abd <- (top10.RGM.wsum$Abundance)/(top10.RGM.wsum$sum)*100
-
-top10.RGM.grouped <- group_by(top10.RGM.wsum, Genus, Type, Site)
-
-RGM.genus <- summarise (top10.RGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
-
-View (RGM.genus)
+#Create a data frame to modify
+top10.RGM.df <- psmelt(RGM_data)
 ```
+
+```
+## Warning in psmelt(RGM_data): The sample variables: 
+## Sample
+##  have been renamed to: 
+## sample_Sample
+## to avoid conflicts with special phyloseq plot attribute names.
+```
+
+```r
+#Create data frame
+test.df.RGM <-top10.RGM.df %>%
+  group_by(Group, Type, Family, Genus, OTU) %>% 
+  summarise(Abd = sum(Abundance)) %>%
+  unite(Group, Type, col="Sample", sep = "_") %>%
+  unite(Family, Genus, col = "Taxa", sep = ";") %>%
+  spread(Sample, Abd)
+
+#Percent
+perc <- function (x) 100 * x/sum(x)
+rnd <- function (x) round(x, 2)
+
+#Table by sample
+tbf.25.RGM <- test.df.RGM %>% 
+  mutate_if(is.numeric, perc) %>%
+  filter(OTU %in% top10.RGM) %>%
+  mutate_if(is.numeric, rnd) %>%
+  mutate(sumRow = rowSums(.[3:6])) %>%
+  arrange(desc(sumRow))
+
+kable(tbf.25.RGM[1:6], digits = 2, caption = "RGM", format = "markdown")
+```
+
+
+
+|Taxa                                               |OTU      | RGM_Pit_Root| RGM_Pit_Soil| RGM_Process_Root| RGM_Process_Soil|
+|:--------------------------------------------------|:--------|------------:|------------:|----------------:|----------------:|
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1368 |         0.02|         0.04|            26.89|             0.01|
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1483 |        24.38|         0.02|             0.00|             0.00|
+|f__Mortierellaceae;g__Mortierella                  |OTU_27   |         0.66|         6.39|             0.18|            15.47|
+|f__Russulaceae;g__Russula                          |OTU_409  |         0.10|        10.28|             0.00|            10.95|
+|f__Vibrisseaceae;g__Phialocephala                  |OTU_687  |        10.20|         0.45|             8.67|             0.04|
+|f__unidentified;g__unidentified                    |OTU_1454 |        16.00|         0.01|             0.00|             0.00|
+|f__unidentified;g__unidentified                    |OTU_1505 |         0.01|        13.39|             0.18|             0.18|
+|f__Russulaceae;g__Russula                          |OTU_100  |         0.00|        12.34|             0.00|             0.00|
+|f__Hygrophoraceae;g__Hygrocybe                     |OTU_105  |         0.00|         1.50|             0.00|            10.78|
+|f__Hyaloscyphaceae;g__unidentified                 |OTU_94   |        10.34|         0.00|             0.01|             0.00|
+|f__unidentified;g__unidentified                    |OTU_37   |         0.01|         0.28|             0.01|            10.01|
+|f__unidentified;g__unidentified                    |OTU_133  |         0.00|         0.00|             9.65|             0.22|
+|f__Helotiales_fam_Incertae_sedis;g__Leptodontidium |OTU_300  |         5.85|         0.82|             2.69|             0.03|
+|f__Exidiaceae;g__unidentified                      |OTU_394  |         3.13|         0.00|             6.08|             0.05|
+|f__unidentified;g__unidentified                    |OTU_183  |         5.13|         0.09|             2.08|             0.00|
+|f__Myxotrichaceae;g__Oidiodendron                  |OTU_284  |         3.51|         0.08|             2.81|             0.03|
+|f__Hydnodontaceae;g__Trechispora                   |OTU_202  |         0.00|         0.45|             5.29|             0.03|
+|f__Archaeorhizomycetaceae;g__Archaeorhizomyces     |OTU_36   |         1.54|         3.16|             0.00|             0.00|
+|f__Inocybaceae;g__Inocybe                          |OTU_304  |         0.00|         0.00|             0.00|             4.67|
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1527 |         0.00|         0.06|             0.00|             4.23|
+|f__Mortierellaceae;g__Mortierella                  |OTU_1122 |         0.00|         0.48|             0.00|             3.58|
+|f__unidentified;g__unidentified                    |OTU_473  |         0.00|         3.86|             0.00|             0.00|
+|f__Russulaceae;g__unidentified                     |OTU_155  |         0.01|         3.40|             0.00|             0.00|
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1455 |         0.00|         3.24|             0.13|             0.01|
+|f__Umbelopsidaceae;g__Umbelopsis                   |OTU_29   |         0.00|         1.55|             0.01|             1.58|
 
 ## Put the tables together
 
 ```r
-All.genus <- rbind (BGM.genus, HKM.genus, SH.genus, RGM.genus)
-View (All.genus)
+# All.genus <- rbind (BGM.genus, HKM.genus, SH.genus, RGM.genus)
+# View (All.genus)
+# unique_genus <- unique (All.genus$Genus)
+# All.genus.table <- data.frame ("Genus" = unique_genus)
+# All.genus.soil <- filter(All.genus, Type == "Soil")
+# All.genus.root <- filter(All.genus, Type == "Root")
+# list_site <- unique (All.genus$Site)
+# All.genus$BGM_1_soil <- NA
 
-unique_genus <- unique (All.genus$Genus)
-All.genus.table <- data.frame ("Genus" = unique_genus)
-All.genus.soil <- filter(All.genus, Type == "Soil")
-All.genus.root <- filter(All.genus, Type == "Root")
-list_site <- unique (All.genus$Site)
-All.genus$BGM_1_soil <- NA
+final_tbf <- full_join(tbf.25.BGM[1:12],tbf.25.HKM[1:12], by=c("Taxa","OTU")) %>%
+  full_join(tbf.25.SH[1:5], by=c("Taxa","OTU")) %>%
+  full_join(tbf.25.RGM[1:6], by=c("Taxa","OTU"))
+
+final_tbf[is.na(final_tbf)] <- ""
+
+kable(final_tbf, digits = 2, caption = "Final Table top 25 OTUs", format = "markdown")
 ```
+
+
+
+|Taxa                                               |OTU      |BGM_1_Root |BGM_1_Soil |BGM_2_Root |BGM_2_Soil |BGM_3_Root |BGM_3_Soil |BGM_4_Root |BGM_4_Soil |BGM_F_Root |BGM_F_Soil |HKM_1_Root |HKM_1_Soil |HKM_2_Root |HKM_2_Soil |HKM_3_Root |HKM_3_Soil |HKM_4_Root |HKM_4_Soil |HKM_F_Root |HKM_F_Soil |SH_F_Soil |SH_M_Soil |SH_P_Soil |RGM_Pit_Root |RGM_Pit_Soil |RGM_Process_Root |RGM_Process_Soil |
+|:--------------------------------------------------|:--------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:----------|:---------|:---------|:---------|:------------|:------------|:----------------|:----------------|
+|f__Pisolithaceae;g__Pisolithus                     |OTU_137  |0          |0.01       |0.03       |0.16       |31.05      |5.37       |12.88      |0.33       |0          |0          |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1417 |0.05       |0.1        |0.02       |0.01       |44.18      |1.09       |0.14       |0.04       |0          |0.1        |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1361 |0.01       |0.01       |0          |0.02       |0          |0.06       |27.38      |0.01       |0          |0.01       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1416 |5.05       |2.74       |2.69       |1.88       |3.68       |2.66       |3.09       |2.16       |0.28       |0.41       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_39   |13.39      |4.13       |0          |0          |0          |0          |0          |0          |0          |0          |0          |0          |0.01       |4.61       |0          |0          |0          |0.01       |0          |0          |          |          |          |             |             |                 |                 |
+|f__Rhizopogonaceae;g__Rhizopogon                   |OTU_261  |8.74       |2.5        |0          |0.89       |0.71       |0.01       |3.42       |0.98       |0          |0          |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_1404 |16.25      |0.06       |0.16       |0.01       |0.06       |0.2        |0.02       |0.02       |0.02       |0.07       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__Boletaceae;g__Boletus                           |OTU_128  |0          |0          |0          |0.03       |0          |0.05       |13.18      |2.29       |0          |0          |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_1428 |0.72       |0.01       |0.05       |0.05       |0.02       |13.82      |0.06       |0.04       |0.05       |0.01       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_1442 |0.02       |0.07       |0.49       |0.05       |0.01       |0.01       |0.14       |13.79      |0.07       |0.11       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_59   |1.47       |0.28       |5.36       |2.61       |0.03       |0          |1.71       |3.05       |0          |0          |           |           |           |           |           |           |           |           |           |           |0         |2.14      |0         |             |             |                 |                 |
+|f__Thelephoraceae;g__unidentified                  |OTU_185  |3.9        |3.58       |4.83       |2.17       |0          |0          |0          |0.01       |0          |0          |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1450 |0.01       |0.17       |0.01       |0.01       |0.01       |1.21       |2.02       |9.85       |0.02       |0.01       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_1406 |1.36       |0.01       |0          |0.01       |0          |11.39      |0.28       |0.01       |0          |0.04       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1435 |0.05       |0.58       |0.01       |0.2        |0          |0.05       |0.15       |10.2       |0          |0.01       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_1448 |0.03       |10.5       |0.01       |0.02       |0.05       |0.01       |0.46       |0.03       |0.08       |0.04       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1371 |0.04       |0.01       |0.01       |0.01       |0          |10.89      |0.09       |0.01       |0          |0.01       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1427 |0.1        |0.08       |0.02       |0.02       |0.04       |10.1       |0.03       |0.05       |0.12       |0.05       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1213 |0.76       |1          |0.55       |6.58       |0.34       |0.55       |0.25       |0.32       |0.04       |0.11       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_1429 |0.01       |0.04       |0.1        |0.02       |0          |0.04       |0          |10.05      |0.03       |0.01       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_1459 |0          |9.12       |0.01       |0.04       |0          |0.02       |0          |0          |0          |0.02       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1426 |0.23       |0.04       |0.03       |7.83       |0.01       |0.12       |0.05       |0.13       |0          |0.37       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1382 |0.26       |0.03       |0.01       |0.03       |0.11       |0.04       |0.77       |6.79       |0.59       |0.03       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_1390 |0.03       |0.02       |0.09       |7.2        |0.09       |0.13       |0.05       |0.03       |0.12       |0.08       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1405 |0.01       |0.12       |0.05       |6.37       |0.01       |0.11       |0.03       |0.05       |0          |0.04       |           |           |           |           |           |           |           |           |           |           |          |          |          |             |             |                 |                 |
+|f__Amanitaceae;g__Amanita                          |OTU_35   |           |           |           |           |           |           |           |           |           |           |1.3        |15.04      |0          |0.07       |20.66      |17.72      |0.39       |5.62       |0.01       |0          |          |          |          |             |             |                 |                 |
+|f__Helotiaceae;g__Meliniomyces                     |OTU_28   |           |           |           |           |           |           |           |           |           |           |18.91      |4.42       |5.4        |1.58       |9.13       |3.16       |5.51       |2.08       |5.89       |1.4        |          |          |          |             |             |                 |                 |
+|f__Hyaloscyphaceae;g__unidentified                 |OTU_76   |           |           |           |           |           |           |           |           |           |           |16.82      |2.2        |1.24       |0.24       |1.89       |1.31       |10.27      |0.2        |5.52       |2.45       |          |          |          |             |             |                 |                 |
+|f__Gloniaceae;g__Cenococcum                        |OTU_26   |           |           |           |           |           |           |           |           |           |           |0.21       |0.83       |0.03       |0.57       |31.41      |2.93       |1.08       |1.36       |0.32       |0.13       |          |          |          |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_58   |           |           |           |           |           |           |           |           |           |           |24.56      |1.3        |0          |0          |0          |0          |4.2        |0          |0          |0          |          |          |          |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_63   |           |           |           |           |           |           |           |           |           |           |9.58       |10.21      |0          |0.01       |0          |0          |4.65       |0.04       |0          |0          |          |          |          |             |             |                 |                 |
+|f__Hyaloscyphaceae;g__unidentified                 |OTU_64   |           |           |           |           |           |           |           |           |           |           |0.41       |0.05       |9.55       |2.13       |6.18       |2.06       |3.11       |0.71       |0          |0.16       |          |          |          |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_34   |           |           |           |           |           |           |           |           |           |           |0.1        |0.47       |7.4        |3.28       |1.44       |2.78       |3.54       |1.18       |1.72       |0.9        |          |          |          |             |             |                 |                 |
+|f__Myxotrichaceae;g__Oidiodendron                  |OTU_89   |           |           |           |           |           |           |           |           |           |           |0.18       |0.47       |4.4        |1.33       |2          |1.71       |8.99       |1.65       |0.29       |0.2        |          |          |          |             |             |                 |                 |
+|f__Cortinariaceae;g__Cortinarius                   |OTU_24   |           |           |           |           |           |           |           |           |           |           |0          |0          |0.01       |2.56       |0.02       |16.59      |0          |0.01       |0          |0          |          |          |          |             |             |                 |                 |
+|f__Mortierellaceae;g__Mortierella                  |OTU_60   |           |           |           |           |           |           |           |           |           |           |0.14       |4.7        |0.03       |6.18       |0.01       |0.02       |0          |0          |0.08       |1.52       |          |          |          |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_46   |           |           |           |           |           |           |           |           |           |           |0          |0          |6.85       |3.87       |0.01       |0          |0          |0          |0          |0          |          |          |          |             |             |                 |                 |
+|f__Myxotrichaceae;g__Oidiodendron                  |OTU_91   |           |           |           |           |           |           |           |           |           |           |0.03       |0.44       |0.53       |2.32       |0.43       |1.82       |2.22       |1.37       |0.02       |0.21       |          |          |          |             |             |                 |                 |
+|f__Clavulinaceae;g__Clavulina                      |OTU_65   |           |           |           |           |           |           |           |           |           |           |0          |0          |0.65       |8.05       |0.01       |0          |0          |0          |0          |0          |          |          |          |             |             |                 |                 |
+|f__Mortierellaceae;g__Mortierella                  |OTU_61   |           |           |           |           |           |           |           |           |           |           |0          |1.06       |0.05       |6.65       |0.01       |0          |0.4        |0.13       |0          |0          |          |          |          |             |             |                 |                 |
+|f__Russulaceae;g__Russula                          |OTU_106  |           |           |           |           |           |           |           |           |           |           |0          |0          |3.42       |4.24       |0          |0.48       |0          |0.05       |0          |0          |          |          |          |             |             |                 |                 |
+|f__Umbelopsidaceae;g__Umbelopsis                   |OTU_29   |           |           |           |           |           |           |           |           |           |           |0          |0          |0.17       |5.8        |0          |0.3        |0.09       |0.34       |0.01       |1.21       |          |          |          |0            |1.55         |0.01             |1.58             |
+|f__Mortierellaceae;g__Mortierella                  |OTU_27   |           |           |           |           |           |           |           |           |           |           |0.16       |3.46       |0.06       |1.27       |0.01       |2.42       |0.09       |0.01       |0.05       |0.25       |          |          |          |0.66         |6.39         |0.18             |15.47            |
+|f__unidentified;g__unidentified                    |OTU_1463 |           |           |           |           |           |           |           |           |           |           |0.04       |6.7        |0.01       |0.02       |0.2        |0.01       |0.06       |0.01       |0.55       |0.01       |          |          |          |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_1443 |           |           |           |           |           |           |           |           |           |           |0.24       |0.02       |0.03       |0          |0.66       |5.36       |0          |0.01       |0.61       |0          |          |          |          |             |             |                 |                 |
+|f__Archaeorhizomycetaceae;g__Archaeorhizomyces     |OTU_36   |           |           |           |           |           |           |           |           |           |           |0          |1.67       |0.01       |3.7        |0.01       |0.36       |0          |0.95       |0          |0          |          |          |          |1.54         |3.16         |0                |0                |
+|f__unidentified;g__unidentified                    |OTU_1444 |           |           |           |           |           |           |           |           |           |           |0          |0          |0          |0          |0          |0.01       |0.03       |6.3        |0.2        |0          |          |          |          |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1358 |           |           |           |           |           |           |           |           |           |           |0.19       |0.02       |0.85       |0.05       |0.04       |0.05       |0          |4.79       |0.1        |0.02       |          |          |          |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_1511 |           |           |           |           |           |           |           |           |           |           |0.01       |0          |0          |0          |0.04       |0          |0          |4.99       |0          |0.01       |          |          |          |             |             |                 |                 |
+|f__Sclerodermataceae;g__Scleroderma                |OTU_108  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |0         |47.19     |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_21   |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |8.79      |0.4       |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_38   |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |7.42      |0.36      |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_33   |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |0         |7.27      |             |             |                 |                 |
+|f__Teratosphaeriaceae;g__Devriesia                 |OTU_52   |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |6.77      |0.2       |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_25   |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |5.65      |0         |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_75   |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |5.34      |0.09      |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_23   |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |5.37      |0         |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_30   |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |3.88      |0         |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1488 |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |2.71      |0         |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1487 |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |2.4       |0         |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1525 |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |2.4       |0         |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1495 |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |2.15      |0         |             |             |                 |                 |
+|f__Didymellaceae;g__Phoma                          |OTU_182  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |2.12      |0.01      |             |             |                 |                 |
+|f__Aspergillaceae;g__Aspergillus                   |OTU_435  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |2.11      |0         |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1483 |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |2.1       |0         |24.38        |0.02         |0                |0                |
+|f__Parmeliaceae;g__Protoparmelia                   |OTU_776  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |2.05      |0.01      |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_528  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |1.99      |0         |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_372  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |1.84      |0.01      |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1285 |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |1.81      |0         |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_116  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |1.73      |0.03      |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1269 |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |1.75      |0         |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_422  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |1.7       |0.01      |             |             |                 |                 |
+|f__unidentified;g__unidentified                    |OTU_1397 |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |0         |1.55      |0         |             |             |                 |                 |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1368 |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |0.02         |0.04         |26.89            |0.01             |
+|f__Russulaceae;g__Russula                          |OTU_409  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |0.1          |10.28        |0                |10.95            |
+|f__Vibrisseaceae;g__Phialocephala                  |OTU_687  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |10.2         |0.45         |8.67             |0.04             |
+|f__unidentified;g__unidentified                    |OTU_1454 |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |16           |0.01         |0                |0                |
+|f__unidentified;g__unidentified                    |OTU_1505 |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |0.01         |13.39        |0.18             |0.18             |
+|f__Russulaceae;g__Russula                          |OTU_100  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |0            |12.34        |0                |0                |
+|f__Hygrophoraceae;g__Hygrocybe                     |OTU_105  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |0            |1.5          |0                |10.78            |
+|f__Hyaloscyphaceae;g__unidentified                 |OTU_94   |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |10.34        |0            |0.01             |0                |
+|f__unidentified;g__unidentified                    |OTU_37   |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |0.01         |0.28         |0.01             |10.01            |
+|f__unidentified;g__unidentified                    |OTU_133  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |0            |0            |9.65             |0.22             |
+|f__Helotiales_fam_Incertae_sedis;g__Leptodontidium |OTU_300  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |5.85         |0.82         |2.69             |0.03             |
+|f__Exidiaceae;g__unidentified                      |OTU_394  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |3.13         |0            |6.08             |0.05             |
+|f__unidentified;g__unidentified                    |OTU_183  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |5.13         |0.09         |2.08             |0                |
+|f__Myxotrichaceae;g__Oidiodendron                  |OTU_284  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |3.51         |0.08         |2.81             |0.03             |
+|f__Hydnodontaceae;g__Trechispora                   |OTU_202  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |0            |0.45         |5.29             |0.03             |
+|f__Inocybaceae;g__Inocybe                          |OTU_304  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |0            |0            |0                |4.67             |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1527 |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |0            |0.06         |0                |4.23             |
+|f__Mortierellaceae;g__Mortierella                  |OTU_1122 |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |0            |0.48         |0                |3.58             |
+|f__unidentified;g__unidentified                    |OTU_473  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |0            |3.86         |0                |0                |
+|f__Russulaceae;g__unidentified                     |OTU_155  |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |0.01         |3.4          |0                |0                |
+|f__Leptosphaeriaceae;g__Leptosphaeria              |OTU_1455 |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |           |          |          |          |0            |3.24         |0.13             |0.01             |
 
 
 
