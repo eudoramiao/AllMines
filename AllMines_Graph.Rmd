@@ -214,7 +214,7 @@ rnd <- function (x) round(x, 2)
 #Table by sample
 tbf.25.BGM <- test.df.BGM %>% 
   mutate_if(is.numeric, perc) %>%
-  filter(OTU %in% top10.BGM) %>%
+  filter(OTU %in% top25.BGM) %>%
   mutate_if(is.numeric, rnd) %>%
   mutate(sumRow = rowSums(.[3:12])) %>%
   arrange(desc(sumRow))
@@ -262,7 +262,7 @@ rnd <- function (x) round(x, 2)
 #Table by sample
 tbf.25.HKM <- test.df.HKM %>% 
   mutate_if(is.numeric, perc) %>%
-  filter(OTU %in% top10.HKM) %>%
+  filter(OTU %in% top25.HKM) %>%
   mutate_if(is.numeric, rnd) %>%
   mutate(sumRow = rowSums(.[3:12])) %>%
   arrange(desc(sumRow))
@@ -303,7 +303,7 @@ rnd <- function (x) round(x, 2)
 #Table by sample
 tbf.25.SH <- test.df.SH %>% 
   mutate_if(is.numeric, perc) %>%
-  filter(OTU %in% top10.SH) %>%
+  filter(OTU %in% top25.SH) %>%
   mutate_if(is.numeric, rnd) %>%
   mutate(sumRow = rowSums(.[3:5])) %>%
   arrange(desc(sumRow))
@@ -344,7 +344,7 @@ rnd <- function (x) round(x, 2)
 #Table by sample
 tbf.25.RGM <- test.df.RGM %>% 
   mutate_if(is.numeric, perc) %>%
-  filter(OTU %in% top10.RGM) %>%
+  filter(OTU %in% top25.RGM) %>%
   mutate_if(is.numeric, rnd) %>%
   mutate(sumRow = rowSums(.[3:6])) %>%
   arrange(desc(sumRow))
@@ -423,6 +423,7 @@ Tree.BGM <- metacoder::heat_tree(taxa::filter_taxa(obj.BGM, taxon_names == "c__A
                                  initial_layout = "reingold-tilford", layout = "davidson-harel")
 Tree.BGM
 ```
+
 ## HKM
 
 ```{r, warning=FALSE, message=FALSE}
@@ -513,7 +514,8 @@ Tree.SH
 ```
 
 
-### Final plot of metacode
+### Final plot of metacoder
+
 ```{r, fig.align='center', fig.height=14, fig.width=18}
 
 plot_grid(Tree.BGM, Tree.HKM, Tree.SH, 
@@ -525,6 +527,73 @@ plot_grid(Tree.BGM, Tree.HKM, Tree.SH,
 
 ```
 
+### All mines metacoder
+
+```{r, warning=FALSE, message=FALSE}
+#Top 100 OTUs
+top100.All <- TopNOTUs(Mines_data, 100)
+top100.All.ps <- prune_taxa(top100.All, Mines_data)
+
+#Merging two variable (Mine and treatment)
+Mn <- get_variable(top100.All.ps, "Mine")
+Trt <- get_variable(top100.All.ps, "Treatment")
+sample_data(top100.All.ps)$Mn_trt <- mapply(paste0, Mn, sep="_", Trt)
+
+#Converting to metacoder
+obj.All <- parse_phyloseq(top100.All.ps)
+
+# Convert counts to proportions
+obj.All$data$otu_table <- calc_obs_props(obj.All,
+                                     data = "otu_table",
+                                     cols = obj.All$data$sample_data$sample_id)
+# Calculate per-taxon proportions
+obj.All$data$tax_table <- calc_taxon_abund(obj.All,
+                                       data = "otu_table",
+                                       cols = obj.All$data$sample_data$sample_id)
+
+#Compare treatments using new variable (Mine and Treatment)
+obj.All$data$diff_table <- compare_groups(obj.All,
+                                          data = "tax_table",
+                                          cols = obj.All$data$sample_data$sample_id,
+                                          groups = obj.All$data$sample_data$Mn_trt)
+```
+
+```{r, fig.width= 9, fig.height=9, fig.align='center', warning=FALSE, message=FALSE}
+#Tree visual
+set.seed(1)
+Tree.All <- metacoder::heat_tree(taxa::filter_taxa(obj.All, taxon_names == "c__Agaricomycetes", subtaxa = TRUE),
+                                node_size = n_obs, 
+                                node_label = taxon_names,
+                                node_color = log2_median_ratio,
+                                node_color_range = c("#018571", "#80cdc1", "#bdbdbd", "#dfc27d", "#a6611a"), 
+                                node_color_trans = "linear",
+                                node_label_max = 120,
+                                node_color_interval = c(-1, 1),
+                                edge_color_interval = c(-1, 1),
+                                node_size_axis_label = "Number of OTUs",
+                                node_color_axis_label = "Log2 ratio median proportions",
+                                title = "All Mine and Forest Site Differences",
+                                title_size = 0.03,
+                                initial_layout = "reingold-tilford", layout = "davidson-harel")
+Tree.All
+```
+
+```{r, fig.height=25, fig.width=15}
+set.seed(1)
+metacoder::heat_tree_matrix(taxa::filter_taxa(obj.All, taxon_names == "c__Agaricomycetes", subtaxa = TRUE),
+                            dataset = "diff_table",
+                            node_size = n_obs, 
+                            node_label = taxon_names,
+                            node_color = log2_median_ratio,
+                            node_color_range = c("#018571", "#80cdc1", "#bdbdbd", "#dfc27d", "#a6611a"), 
+                            node_color_trans = "linear",
+                            # node_label_max = 120,
+                            # node_color_interval = c(-1, 1),
+                            # edge_color_interval = c(-1, 1),
+                            node_size_axis_label = "Number of OTUs",
+                            node_color_axis_label = "Log2 ratio median proportions",
+                            initial_layout = "reingold-tilford", layout = "davidson-harel")
+```
 
 ## Funguild analysis of BGM soil and root samples
 
@@ -793,7 +862,7 @@ ord.plot.env
 # Heatmap - Relative Abundance of top 25 OTUs
 
 ```{r, message=FALSE, warning=FALSE, fig.width = 12, fig.height=7}
-library(ampvis2)
+library(ampvis)
 
 # top.BGM <- TopNOTUs(BGM_field, 100)
 # BGM.df <- prune_taxa(top.BGM, BGM_field) 
