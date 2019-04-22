@@ -581,18 +581,19 @@ Tree.All
 ```{r, fig.height=25, fig.width=15}
 set.seed(1)
 metacoder::heat_tree_matrix(taxa::filter_taxa(obj.All, taxon_names == "c__Agaricomycetes", subtaxa = TRUE),
-                            dataset = "diff_table",
-                            node_size = n_obs, 
-                            node_label = taxon_names,
-                            node_color = log2_median_ratio,
-                            node_color_range = c("#018571", "#80cdc1", "#bdbdbd", "#dfc27d", "#a6611a"), 
-                            node_color_trans = "linear",
-                            # node_label_max = 120,
-                            # node_color_interval = c(-1, 1),
-                            # edge_color_interval = c(-1, 1),
-                            node_size_axis_label = "Number of OTUs",
-                            node_color_axis_label = "Log2 ratio median proportions",
-                            initial_layout = "reingold-tilford", layout = "davidson-harel")
+              dataset = "diff_table",
+              node_size = n_obs, 
+              node_label = taxon_names,
+              node_color = log2_median_ratio,
+              node_color_range = c("#018571", "#80cdc1", "#bdbdbd", "#dfc27d", "#a6611a"), 
+              #node_color_range = c("#a6611a","#dfc27d","#bdbdbd","#80cdc1","#018571"),
+              node_color_trans = "linear",
+              node_label_max = 120,
+              node_color_interval = c(-1, 1),
+              edge_color_interval = c(-1, 1),
+              node_size_axis_label = "Number of OTUs",
+              node_color_axis_label = "Log2 ratio median proportions",
+              initial_layout = "reingold-tilford", layout = "davidson-harel")
 ```
 
 ## Funguild analysis of BGM soil and root samples
