@@ -375,7 +375,7 @@ kable(final_tbf, digits = 2, caption = "Final Table top 25 OTUs", format = "mark
 
 
 ## Metacoder analysis for different mine field soil samples
-##BGM
+## BGM
 I'd wanna change the color to be brown (mine site) and green (forest site), because it is more intuitive--any suggestion? Do I flip the color range?
 __R/__ You only have to change `node_color_range` to invert the colro scale.  I already id, so now Mine is brown and forest sites are green.
 
@@ -421,7 +421,7 @@ Tree.BGM <- metacoder::heat_tree(taxa::filter_taxa(obj.BGM, taxon_names == "c__A
                                  initial_layout = "reingold-tilford", layout = "davidson-harel")
 Tree.BGM
 ```
-##HKM
+## HKM
 
 ```{r, warning=FALSE, message=FALSE}
 #Top 100 OTUs
@@ -466,7 +466,7 @@ Tree.HKM <- metacoder::heat_tree(taxa::filter_taxa(obj.HKM, taxon_names == "c__A
 Tree.HKM
 ```
 
-##SH
+## SH
 
 ```{r, warning=FALSE, message=FALSE}
 #Top 100 OTUs
@@ -493,7 +493,7 @@ obj.SH$data$diff_table <- compare_groups(obj.SH,
 #Tree visual
 set.seed(1)
 
-Tree.SH <- metacoder::heat_tree(taxa::filter_taxa(obj.HKM, taxon_names == "c__Agaricomycetes", subtaxa = TRUE),
+Tree.SH <- metacoder::heat_tree(taxa::filter_taxa(obj.SH, taxon_names == "c__Agaricomycetes", subtaxa = TRUE),
                                 node_size = n_obs, 
                                 node_label = taxon_names,
                                 node_color = log2_median_ratio,
@@ -509,6 +509,7 @@ Tree.SH <- metacoder::heat_tree(taxa::filter_taxa(obj.HKM, taxon_names == "c__Ag
                                 initial_layout = "reingold-tilford", layout = "davidson-harel")
 Tree.SH
 ```
+
 
 ### Final plot of metacode
 ```{r, fig.align='center', fig.height=14, fig.width=18}
