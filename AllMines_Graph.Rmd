@@ -193,18 +193,18 @@ A summary table representing the top OTUs across sample types and mine sites for
 ## BGM
 
 ```{r}
-#Using BGM_mine dataset to extract top 10 OTUs on the mine sites
-top10.BGM <- TopNOTUs(BGM_mine, 25) 
+#Using BGM_mine dataset to extract top 25 OTUs on the mine sites
+top25.BGM <- TopNOTUs(BGM_mine, 25) 
 
 #Create a data frame to modify
-top10.BGM.df <- psmelt(BGM_field)
+top25.BGM.df <- psmelt(BGM_field)
   
 #Create data frame
-test.df.BGM <-top10.BGM.df %>%
-  group_by(Group, Type, Family, Genus, OTU) %>% 
+test.df.BGM <-top25.BGM.df %>%
+  group_by(Group, Type, Class, Family, Genus, OTU) %>% 
   summarise(Abd = sum(Abundance)) %>%
   unite(Group, Type, col="Sample", sep = "_") %>%
-  unite(Family, Genus, col = "Taxa", sep = ";") %>%
+  unite(Class, Family, Genus, col = "Taxa", sep = ";") %>%
   spread(Sample, Abd)
 
 #Percent
@@ -242,17 +242,17 @@ kable(tbf.25.BGM[1:12], digits = 2, caption = "BGM", format = "markdown")
 # HKM.genus <- summarise (top10.HKM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
 # View (HKM.genus)
 
-top10.HKM <- TopNOTUs(HKM_mine, 25) 
+top25.HKM <- TopNOTUs(HKM_mine, 25) 
 
 #Create a data frame to modify
-top10.HKM.df <- psmelt(HKM_field)
+top25.HKM.df <- psmelt(HKM_field)
   
 #Create data frame
-test.df.HKM <-top10.HKM.df %>%
-  group_by(Group, Type, Family, Genus, OTU) %>% 
+test.df.HKM <-top25.HKM.df %>%
+  group_by(Group, Type, Class, Family, Genus, OTU) %>% 
   summarise(Abd = sum(Abundance)) %>%
   unite(Group, Type, col="Sample", sep = "_") %>%
-  unite(Family, Genus, col = "Taxa", sep = ";") %>%
+  unite(Class, Family, Genus, col = "Taxa", sep = ";") %>%
   spread(Sample, Abd)
 
 #Percent
@@ -283,17 +283,17 @@ kable(tbf.25.HKM[1:12], digits = 2, caption = "HKM", format = "markdown")
 # SH.genus <- summarise (top10.SH.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
 # View (SH.genus)
 
-top10.SH <- TopNOTUs(SH_mine, 25) 
+top25.SH <- TopNOTUs(SH_mine, 25) 
 
 #Create a data frame to modify
-top10.SH.df <- psmelt(SH_field)
+top25.SH.df <- psmelt(SH_field)
   
 #Create data frame
-test.df.SH <-top10.SH.df %>%
-  group_by(Group, Type, Family, Genus, OTU) %>% 
+test.df.SH <-top25.SH.df %>%
+  group_by(Group, Type, Class, Family, Genus, OTU) %>% 
   summarise(Abd = sum(Abundance)) %>%
   unite(Group, Type, col="Sample", sep = "_") %>%
-  unite(Family, Genus, col = "Taxa", sep = ";") %>%
+  unite(Class, Family, Genus, col = "Taxa", sep = ";") %>%
   spread(Sample, Abd)
 
 #Percent
@@ -324,17 +324,17 @@ kable(tbf.25.SH[1:5], digits = 2, caption = "SH", format = "markdown")
 # RGM.genus <- summarise (top10.RGM.grouped, relative_abundance = (sum(Abundance)/sum(sum))*100)
 # View (RGM.genus)
 
-top10.RGM <- TopNOTUs(RGM_data, 25) 
+top25.RGM <- TopNOTUs(RGM_data, 25) 
 
 #Create a data frame to modify
-top10.RGM.df <- psmelt(RGM_data)
+top25.RGM.df <- psmelt(RGM_data)
   
 #Create data frame
-test.df.RGM <-top10.RGM.df %>%
-  group_by(Group, Type, Family, Genus, OTU) %>% 
+test.df.RGM <-top25.RGM.df %>%
+  group_by(Group, Type, Class, Family, Genus, OTU) %>% 
   summarise(Abd = sum(Abundance)) %>%
   unite(Group, Type, col="Sample", sep = "_") %>%
-  unite(Family, Genus, col = "Taxa", sep = ";") %>%
+  unite(Class, Family, Genus, col = "Taxa", sep = ";") %>%
   spread(Sample, Abd)
 
 #Percent
@@ -370,14 +370,16 @@ final_tbf <- full_join(tbf.25.BGM[1:12],tbf.25.HKM[1:12], by=c("Taxa","OTU")) %>
 final_tbf[is.na(final_tbf)] <- ""
 
 kable(final_tbf, digits = 2, caption = "Final Table top 25 OTUs", format = "markdown")
+
+write.csv(final_tbf, file = "Unique_OTU_table.csv")
+
 ```
 
 
 
 ## Metacoder analysis for different mine field soil samples
+
 ## BGM
-I'd wanna change the color to be brown (mine site) and green (forest site), because it is more intuitive--any suggestion? Do I flip the color range?
-__R/__ You only have to change `node_color_range` to invert the colro scale.  I already id, so now Mine is brown and forest sites are green.
 
 ```{r, warning=FALSE, message=FALSE}
 #Top 100 OTUs
@@ -704,10 +706,10 @@ ord.plot.env + facet_grid(Treatment ~ Type)
 
 #Creating data frame from phyloseq object -- extracting the top 100 taxa
 #Removing only HKM forest
-#Mines.NF <- subset_samples(Mines_data, Site != "HKM_F") 
+Mines.NF <- subset_samples(Mines_data, Site != "HKM_F") 
 
 #Removing all the forest
-Mines.NF <- subset_samples(Mines_data, Treatment != "Forest") 
+#Mines.NF <- subset_samples(Mines_data, Treatment != "Forest") 
 
 top100.Mines.NF <- TopNOTUs(Mines.NF, 100)
 Mines.df.NF <- prune_taxa(names(top100.Mines.NF), Mines.NF)
@@ -716,10 +718,28 @@ Mines.df.NF <- prune_taxa(names(top100.Mines.NF), Mines.NF)
 Mines_ord.NF <- ordinate(Mines.df.NF, "PCoA", "bray")
 
 #Plotting ordination
-Mines_ord_plot.NF <- plot_ordination(Mines.df.NF, Mines_ord.NF, color = "Site", shape = "Mine")
+colors2 <- c("#084594",
+"#084594",
+"#084594",
+"#084594",
+"#4292c6",
+"#4a1486",
+"#4a1486",
+"#4a1486",
+"#4a1486",
+"#d94801",
+"#d94801",
+"#74c476",
+"#238b45",
+"#238b45")
+
+colors3 <- c("#084594","#4a1486", "#d94801","#74c476")
+
+shapes <- c(17, 16)
+Mines_ord_plot.NF <- plot_ordination(Mines.df.NF, Mines_ord.NF, color = "Site", shape = "Treatment")
 
 (Mines_ord_plot2.NF <- Mines_ord_plot.NF + geom_point(size = 5, alpha = 0.7) + 
-  scale_colour_manual(values = colors) + scale_shape_manual(values = shapes) + 
+  scale_colour_manual(values = colors2) + scale_shape_manual(values = shapes) + 
   labs(title = "PCoA Mines") +
   theme_gray(base_size = 18) + labs(color = "Site", shape = "Mine") +
   facet_grid(~ Type) +   
@@ -755,14 +775,14 @@ ord_plot.data <- plot_ordination(Mines.df.NF, Mines_ord.NF,
                             color = "Site", shape = "Mine", justDF = TRUE)
 
 ord.plot.env <- ggplot(data = ord_plot.data, aes(x = Axis.1, y = Axis.2)) + 
-  geom_point(aes(color=Site, shape=Mine), size = 5, alpha = 0.7) + 
-    scale_colour_manual(values = colors) + scale_shape_manual (values = shapes) +
-  labs(color = "Site", shape = "Mine", x = "PCoA 1 [8.5%]", y = "PCoA 2 [4.6%]") +
+  geom_point(aes(color=Site, shape=Treatment), size = 5, alpha = 0.7) + 
+    scale_colour_manual(values = colors2) + scale_shape_manual (values = shapes) +
+  labs(color = "Site", shape = "Treatment", x = "PCoA 1 [8.5%]", y = "PCoA 2 [4.6%]") +
   geom_segment(data = fit_plot, aes(x = 0, xend = Axis.1.x, y = 0, yend = Axis.2.x), 
                arrow = arrow(length = unit(0.1,"cm")), color = "black", size = 1) + 
   geom_label_repel(data = fit_plot, aes(x = Axis.1.x, y = Axis.2.x, label = Env.var), 
             size = 4, force = 1) +
-  facet_grid(~ Type) +
+  facet_grid(rows = vars(Type)) +
   theme_gray(base_size = 18) + theme(legend.title = element_text(size = 18),
                                      legend.text = element_text(size = 16),
                                      legend.key.size = unit(0.6, "cm"))
@@ -773,7 +793,7 @@ ord.plot.env
 # Heatmap - Relative Abundance of top 25 OTUs
 
 ```{r, message=FALSE, warning=FALSE, fig.width = 12, fig.height=7}
-library(ampvis)
+library(ampvis2)
 
 # top.BGM <- TopNOTUs(BGM_field, 100)
 # BGM.df <- prune_taxa(top.BGM, BGM_field) 
